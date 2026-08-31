@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#234b70" />
+    <meta name="description" content="Atlas is a local-first US geospatial data viewer for CSV, JSON, and GeoJSON layers." />
+    <title>Atlas — US geospatial data viewer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="brand-mark">A</div>
+        <div><strong>ATLAS</strong><span>US GEOSPATIAL DATA VIEWER</span></div>
+      </div>
+      <div class="header-meta"><span class="connection-dot"></span> LOCAL / NO UPLOADS <span class="header-divider"></span> GITHUB PAGES READY</div>
+    </header>
+
+    <nav class="toolbar" aria-label="Application toolbar">
+      <button class="tool-button primary" id="newLayerButton" type="button">＋ New layer</button>
+      <button class="tool-button" id="openFileButton" type="button">Open data…</button>
+      <button class="tool-button" id="pasteDataButton" type="button">Paste data…</button>
+      <span class="toolbar-spacer"></span>
+      <span class="file-status" id="fileStatus">No file loaded · add a layer to begin</span>
+      <button class="tool-button" id="exportButton" type="button">Export SVG</button>
+      <input id="fileInput" type="file" accept=".csv,.json,.geojson,text/csv,application/json,application/geo+json" hidden />
+    </nav>
+
+    <main class="app-shell">
+      <div class="workspace-grid">
+        <section class="window-panel map-panel" aria-label="Map view">
+          <div class="window-titlebar"><span>Map view</span><span class="titlebar-status" id="mapStatus">2 layers · 32 mapped rows</span></div>
+          <div class="map-toolbar">
+            <label>Base map <select id="baseMapSelect"><option value="plain">US outline</option><option value="grid">US outline + grid</option></select></label>
+            <label>Show labels <select id="labelModeSelect"><option value="state">State codes</option><option value="none">None</option></select></label>
+            <label>Map foundation <select id="boundaryModeSelect"><option value="states">State boundaries</option><option value="aquifers">Aquifer boundaries</option><option value="both">States + aquifers</option></select></label>
+            <label class="map-presentation-control">Map view <select id="mapPresentationSelect"><option value="focus">Focus + context</option><option value="overlay">Overlay all layers</option><option value="multiples">Compare layers separately</option></select></label>
+            <label class="map-emphasis-control">Overlay contrast <select id="layerEmphasisSelect"><option value="selected">Selected layer emphasized</option><option value="balanced">All layers balanced</option></select></label>
+            <span class="map-toolbar-spacer"></span>
+            <div class="zoom-controls" aria-label="Map zoom controls"><button class="small-button" id="zoomOutButton" type="button" title="Zoom out" aria-label="Zoom out">−</button><span id="zoomLabel">100%</span><button class="small-button" id="zoomInButton" type="button" title="Zoom in" aria-label="Zoom in">＋</button><button class="small-button" id="resetZoomButton" type="button">Reset</button></div>
+            <button class="small-button" id="zoomToDataButton" type="button">Zoom to data</button>
+            <button class="small-button" id="fitMapButton" type="button">Fit view</button>
+          </div>
+          <div class="aquifer-focus-bar" id="aquiferFocusBar" hidden>
+            <div class="aquifer-focus-intro"><span>AQUIFER FOCUS</span><strong>Choose a persistent map selection</strong></div>
+            <label>Type<select id="aquiferFocusType"></select></label>
+            <label>System<select id="aquiferFocusName"></select></label>
+            <label>Display<select id="aquiferFocusMode"><option value="highlight">Highlight selection</option><option value="filter">Show selection only</option></select></label>
+            <button class="small-button" id="clearAquiferFocusButton" type="button">Clear selection</button>
+            <span class="aquifer-focus-summary" id="aquiferFocusSummary">All representative systems visible.</span>
+          </div>
+          <div class="map-reading-strip" id="mapReadingStrip" aria-live="polite"></div>
+          <div class="map-stage" id="mapStage">
+            <div class="map-single-view" id="mapSingleView">
+              <svg id="mapSvg" class="map-svg" viewBox="0 0 1000 600" role="img" aria-labelledby="mapTitle mapDescription">
+              <title id="mapTitle">United States data map</title>
+              <desc id="mapDescription">A map of the contiguous United States with point, line, and area features from active layers.</desc>
+              <defs>
+                <pattern id="mapGrid" width="50" height="50" patternUnits="userSpaceOnUse">
+                  <path d="M 50 0 L 0 0 0 50" fill="none" stroke="currentColor" stroke-width="1" opacity=".11" />
+                </pattern>
+                <filter id="pointShadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1f2e3c" flood-opacity=".25" /></filter>
+                <filter id="densityBlur" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="4.2" /></filter>
+                <clipPath id="densityLandClip"></clipPath>
+              </defs>
+              <rect class="map-grid" id="mapGridRect" x="0" y="0" width="1000" height="600"></rect>
+              <g id="mapViewport">
+                <g id="statePaths" class="state-paths"></g>
+                <g id="mapLabels" class="map-labels" aria-hidden="true"></g>
+                <g id="aquiferHitVisuals" class="aquifer-hit-visuals"></g>
+                <g id="layerVisuals"></g>
+              </g>
+              <g class="map-compass" transform="translate(923 520)"><circle r="29"></circle><path d="M0 -18 L5 3 L0 0 L-5 3 Z"></path><text y="44">N</text></g>
+              </svg>
+            </div>
+            <div class="map-multiples-view" id="mapMultiplesView" hidden></div>
+            <div class="map-empty" id="mapEmpty" hidden><strong>No geometry to display</strong><span>Check the source geometry and fields in Layer properties.</span></div>
+            <div class="map-tooltip" id="mapTooltip" hidden></div>
+          </div>
+          <div class="map-legend" id="mapLegend" aria-label="Map legend"></div>
+          <div class="map-footer"><span id="mapRowSummary">0 visual geometries rendered</span><span class="footer-separator">|</span><span id="mapCoordinateSummary">W 125° · E 67° · N 49° · S 25°</span><span class="map-footer-spacer"></span><span id="mapMeasureSummary">Layer color = selected style</span></div>
+        </section>
+
+        <aside class="side-column" aria-label="Layer manager and properties">
+          <section class="window-panel data-entry-panel is-collapsed" id="dataEntryPanel">
+            <div class="window-titlebar"><span>Load data</span><span class="panel-title-actions"><span>CSV / JSON / GeoJSON</span><button class="panel-toggle" id="toggleDataEntryButton" type="button" aria-expanded="false">Show</button></span></div>
+            <div class="entry-body">
+              <p>Paste a header row followed by records, use <strong>Open data…</strong> above, or start with one of the built-in visual samples.</p>
+              <label>Layer name<input id="pasteLayerName" type="text" placeholder="e.g. groundwater depth" /></label>
+              <label>Paste data<textarea id="pasteInput" rows="5" placeholder="lat,long,gwd,year
+30.416,-87.853,35.0,2002
+30.452,-87.742,13.66,2009"></textarea></label>
+              <div class="entry-actions"><button class="small-button" id="loadSampleFileButton" type="button">Load sample.csv</button><button class="small-button" id="loadExampleButton" type="button">Use sample rows</button><button class="small-button primary" id="createPastedLayerButton" type="button">Load pasted data</button></div>
+              <div class="sample-gallery">
+                <div class="sample-gallery-heading"><strong>Built-in sample gallery</strong><button class="small-button" id="loadAllSamplesButton" type="button">Load all demo layers</button></div>
+                <div class="sample-grid">
+                  <button class="sample-card" type="button" data-sample-key="states"><span class="sample-card-title">State indicators</span><small>State / region codes</small><em>20 states · tabular</em></button>
+                  <button class="sample-card" type="button" data-sample-key="stations"><span class="sample-card-title">Point stations</span><small>CSV latitude / longitude</small><em>12 locations · points</em></button>
+                  <button class="sample-card" type="button" data-sample-key="wide"><span class="sample-card-title">Wide observations</span><small>Several numeric fields</small><em>6 sites · selectable measures</em></button>
+                  <button class="sample-card" type="button" data-sample-key="geoPoints"><span class="sample-card-title">GeoJSON sites</span><small>FeatureCollection points</small><em>4 features · candidates</em></button>
+                  <button class="sample-card" type="button" data-sample-key="multipoints"><span class="sample-card-title">Parcel clusters</span><small>GeoJSON multipoints</small><em>2 clusters · 7 markers</em></button>
+                  <button class="sample-card" type="button" data-sample-key="buildings"><span class="sample-card-title">Building footprints</span><small>GeoJSON polygons</small><em>3 areas · filled</em></button>
+                  <button class="sample-card" type="button" data-sample-key="infrastructure"><span class="sample-card-title">Utility corridors</span><small>Lines + multilines</small><em>2 features · outlines</em></button>
+                  <button class="sample-card" type="button" data-sample-key="constraints"><span class="sample-card-title">Protected areas</span><small>GeoJSON multipolygon</small><em>1 feature · constraint</em></button>
+                  <button class="sample-card" type="button" data-sample-key="aquifers"><span class="sample-card-title">Aquifer coverage</span><small>Named polygon regions</small><em>6 features · broad class colors</em></button>
+                  <button class="sample-card" type="button" data-sample-key="mixed"><span class="sample-card-title">Mixed geometry</span><small>Point + line + area</small><em>1 collection · reference</em></button>
+                </div>
+              </div>
+              <div class="sample-gallery real-data-gallery">
+                <div class="sample-gallery-heading"><strong>Real reference data</strong><span class="dataset-license">official sources</span></div>
+                <button class="sample-card real-data-card" type="button" data-real-dataset-key="gwd2022"><span class="sample-card-title">Observed groundwater depth · 2022</span><small>Most recent year in the large CONUS source file</small><em>1,274 records · density grid with GWD in feet</em></button>
+                <button class="sample-card real-data-card" type="button" data-real-dataset-key="usgsCurrent"><span class="sample-card-title">USGS groundwater · nationwide latest available</span><small>Latest geolocated monitoring-site snapshot</small><em>Depth to water · density grid · refreshable from USGS</em></button>
+                <button class="sample-card real-data-card" type="button" data-real-dataset-key="pnnl"><span class="sample-card-title">PNNL data center buildings</span><small>Existing building-level locations · 44 states</small><em>1,237 records · uniform dots</em></button>
+                <div class="remote-data-grid">
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="eiaPlants"><span class="sample-card-title">EIA power plants</span><small>Power-plant points · 2025 early release</small><em>16,900 records · real coordinates</em></button>
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="hifldSubstations"><span class="sample-card-title">HIFLD substations</span><small>High-voltage infrastructure points</small><em>77,945 records · nationwide snapshot</em></button>
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="waterServiceAreas"><span class="sample-card-title">USGS water service areas</span><small>Community public-supply coverage</small><em>18,806 polygons · simplified display export</em></button>
+                  <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="hifldLines"><span class="sample-card-title">HIFLD transmission lines</span><small>National lines · loads visible viewport</small><em>Auto-zooms · 1,200 feature cap</em></button>
+                  <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="wetlands"><span class="sample-card-title">National Wetlands Inventory</span><small>USFWS wetland polygons</small><em>Auto-zooms · live query</em></button>
+                  <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="floodZones"><span class="sample-card-title">FEMA flood hazard zones</span><small>NFHL effective flood zones</small><em>Auto-zooms · live query</em></button>
+                  <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="padus"><span class="sample-card-title">PAD-US protected areas</span><small>USGS protected-land polygons</small><em>Auto-zooms · live query</em></button>
+                </div>
+                <div class="data-source-note"><strong>Included local files:</strong> PNNL/ODbL, EIA 860, a nationwide HIFLD substation snapshot, and a 250 m simplified export of USGS water-service areas. <strong>Viewport layers:</strong> HIFLD lines, USFWS NWI, FEMA NFHL, and USGS PAD-US are queried from public ArcGIS services; clicking a card zooms to the service’s readable scale automatically. <strong>Water source:</strong> <a href="https://www.usgs.gov/data/public-supply-water-service-areas-within-conterminous-united-states-2017" target="_blank" rel="noreferrer">official USGS WSA_v1 release ↗</a> and citation.</div>
+                <div class="data-source-note"><a href="https://api.waterdata.usgs.gov/docs/ogcapi" target="_blank" rel="noreferrer">USGS Water Data API ↗</a> · <a href="https://energyfactbook.com/data-centers/map/" target="_blank" rel="noreferrer">PNNL source and methodology ↗</a> · <a href="https://www.eia.gov/electricity/data/eia860/" target="_blank" rel="noreferrer">EIA source ↗</a> · <a href="https://services6.arcgis.com/OO2s4OoyCZkYJ6oE/arcgis/rest/services/Substations/FeatureServer/0" target="_blank" rel="noreferrer">HIFLD substation service ↗</a> · <a href="https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-download" target="_blank" rel="noreferrer">PAD-US download and citation ↗</a></div>
+              </div>
+              <div class="dialog-error" id="pasteError" hidden></div>
+            </div>
+          </section>
+          <section class="window-panel layer-panel">
+            <div class="window-titlebar"><span>Layers</span><span id="layerCount">2 active</span></div>
+            <div class="layer-toolbar"><button class="small-button primary" id="addLayerButton" type="button">＋ Add layer</button><button class="small-button" id="focusLayerButton" type="button">Selected only</button><button class="small-button" id="showAllLayersButton" type="button">Show all</button><button class="small-button" id="clearLayersButton" type="button">Clear</button></div>
+            <div class="layer-stack-note"><span class="stack-note-mark">↳</span><span>Focus view gives the selected layer the foreground. Context stays quiet; use overlay only when co-location is the question.</span></div>
+            <div class="layer-list" id="layerList"></div>
+          </section>
+
+          <section class="window-panel properties-panel">
+            <div class="window-titlebar"><span>Layer properties</span><span id="propertyLayerStatus">Select a layer</span></div>
+            <div class="properties-body" id="propertiesBody">
+              <div class="no-selection" id="noSelection">Select a layer to edit its map definition.</div>
+              <div id="propertyForm" hidden>
+                <div class="form-note"><strong>Visual layer definition.</strong> Choose how this source should look on the map. Atlas does not score sites, model suitability, or calculate relationships between layers.</div>
+                <div class="visual-recipe" id="visualRecipe" aria-label="Current visual recipe"></div>
+                <label>Layer name<input id="layerNameField" type="text" /></label>
+                <div class="form-row two-col"><label>Geometry<select id="geometryTypeField"><option value="points">Point coordinates</option><option value="states">State / region code</option><option value="Point">GeoJSON point</option><option value="MultiPoint">GeoJSON multipoint</option><option value="LineString">GeoJSON line</option><option value="MultiLineString">GeoJSON multiline</option><option value="Polygon">GeoJSON polygon</option><option value="MultiPolygon">GeoJSON multipolygon</option><option value="GeometryCollection">GeoJSON geometry collection</option></select></label><label>Point display<select id="displayModeField"><option value="bubbles">Scaled bubbles</option><option value="dots">Uniform dots</option><option value="density">Density grid · heatmap</option></select></label></div>
+                <div class="form-row two-col" id="densityControls" hidden><label>Density value<select id="densityAggregationField"><option value="count">Record count</option><option value="average">Average measure</option><option value="sum">Measure sum</option><option value="max">Maximum measure</option></select></label><label>Color scale<select id="densityColorScaleField"><option value="sequential">Green → red (default)</option><option value="spectral">Blue → red</option><option value="greenRed">Green → red · vivid</option><option value="redGreen">Red → green</option><option value="intensity">Layer color intensity</option></select></label></div>
+                <div class="form-row two-col" id="pointFields"><label>Latitude field<select id="latitudeField"></select></label><label>Longitude field<select id="longitudeField"></select></label></div>
+                <div id="regionFields" hidden><label>Region / state field<select id="regionField"></select></label></div>
+                <label>Measure field<select id="measureField"></select></label>
+                <div class="form-row two-col"><label>Label field <span class="optional">optional</span><select id="labelField"></select></label><label>Time / category <span class="optional">optional</span><select id="timeField"></select></label></div>
+                <div class="form-row two-col"><label>Layer role<select id="roleField"><option value="candidate">Candidate sites / buildings</option><option value="infrastructure">Infrastructure</option><option value="constraint">Constraint / exclusion</option><option value="context">Context / reference</option></select></label><label>Area display<select id="geometryDisplayField"><option value="auto">Use role styling</option><option value="fill">Filled areas</option><option value="outline">Outlines only</option></select></label></div>
+                <div class="form-row two-col"><label>Feature color field <span class="optional">optional</span><select id="featureColorField"></select></label><label>Layer color<input id="colorField" type="color" value="#c45b28" /></label></div>
+                <div class="focus-panel" id="stateFilterPanel" hidden>
+                  <div class="focus-panel-heading"><strong>State focus</strong><span>highlight or filter</span></div>
+                  <div class="form-row two-col"><label>State / region <span class="optional" id="stateFilterFieldNote">region field</span><select id="stateFilterValue"></select></label><div class="field-help" id="stateFilterSummary">Choose a state to focus on its mapped records.</div></div>
+                  <div class="form-row two-col"><label>Focus mode<select id="stateFilterModeField"><option value="highlight">Highlight matches</option><option value="filter">Show matches only</option></select></label><div class="field-help">This uses the selected region field, so it can filter points or state-level records.</div></div>
+                  <div class="filter-actions"><button class="small-button primary" id="applyStateFilterButton" type="button">Apply focus</button><button class="small-button" id="clearStateFilterButton" type="button">Clear focus</button></div>
+                </div>
+                <div class="focus-panel" id="aquiferFilterPanel" hidden>
+                  <div class="focus-panel-heading"><strong>Aquifer focus</strong><span>highlight or filter</span></div>
+                  <div class="form-row two-col"><label>Type / broad class <span class="optional">ROCK_NAME</span><select id="filterTypeValue"></select></label><label>Specific name <span class="optional">AQ_NAME</span><select id="filterNameValue"></select></label></div>
+                  <div class="form-row two-col"><label>Focus mode<select id="filterModeField"><option value="highlight">Highlight matches</option><option value="filter">Show matches only</option></select></label><div class="field-help" id="filterSummary">Choose a broad type, a specific name, or both.</div></div>
+                  <div class="filter-actions"><button class="small-button primary" id="applyAquiferFilterButton" type="button">Apply focus</button><button class="small-button" id="clearAquiferFilterButton" type="button">Clear focus</button></div>
+                </div>
+                <div class="form-row two-col"><label>Labels<select id="showLabelsField"><option value="no">Hide labels</option><option value="yes">Show labels</option></select></label><div class="field-help">Use a broad category such as <code>ROCK_NAME</code> for a readable overview. More detailed fields create more legend entries.</div></div>
+                <div class="form-row two-col"><label>Marker size <output id="markerSizeOutput">5px</output><input id="markerSizeField" type="range" min="2" max="12" step="1" value="5" /></label><label>Line width <output id="lineWidthOutput">1.5px</output><input id="lineWidthField" type="range" min=".5" max="6" step=".25" value="1.5" /></label></div>
+                <div class="form-row two-col"><label>Units <span class="optional">optional</span><input id="unitsField" type="text" placeholder="e.g. ft, °C, index" /></label><label>Opacity <output id="opacityOutput">80%</output><input id="opacityField" type="range" min="20" max="100" value="80" /></label></div>
+                <label>Layer notes <span class="optional">optional</span><textarea id="layerNotesField" rows="2" placeholder="What does this layer represent?"></textarea></label>
+                <button class="apply-button" id="applyPropertiesButton" type="button">Apply layer definition</button>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <section class="window-panel preview-panel is-collapsed">
+        <div class="window-titlebar"><span>Data preview</span><span class="panel-title-actions"><span id="previewStatus">No layer selected</span><button class="panel-toggle" id="togglePreviewButton" type="button" aria-expanded="false">Show</button></span></div>
+        <div class="preview-toolbar"><span>First rows from the selected layer</span><span class="preview-fields" id="previewFields"></span></div>
+        <div class="table-scroll"><table><thead id="previewHead"></thead><tbody id="previewBody"></tbody></table></div>
+      </section>
+
+      <section class="input-help window-panel">
+        <div><strong>Input contract</strong><span>Bring CSV, JSON array, or GeoJSON FeatureCollection. GeoJSON areas and lines stay as source geometry.</span></div>
+        <div><strong>For point data</strong><span>Choose latitude and longitude columns, like <code>lat</code> and <code>long</code> in sample.csv.</span></div>
+        <div><strong>For wide datasets</strong><span>Pick one measure at a time, such as <code>gwd</code>, <code>P_12</code>, or <code>PET_12</code>.</span></div>
+        <div><strong>For coverage layers</strong><span>Use GeoJSON polygons for aquifers, candidate footprints, protected land, or other regions. Use a broad field such as <code>ROCK_NAME</code> for distinct, readable category colors.</span></div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="us-map.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

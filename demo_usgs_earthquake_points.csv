@@ -1,0 +1,181 @@
+event_id,event_time_utc,latitude,longitude,magnitude,depth_km,site_name,category,magnitude_type,status,tsunami_reports,felt_reports,significance,source_url
+tx2026qwimff,2026-08-27T18:55:47.420Z,31.67100,-104.41600,2.60,7.38,"56 km S of Whites City, New Mexico",2.5–2.9,ml,reviewed,0,,104,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026qwimff
+ci41537288,2026-08-27T03:36:18.220Z,32.14183,-115.77817,2.56,6.21,"52 km SSW of Progreso, B.C., MX",2.5–2.9,ml,reviewed,0,,101,https://earthquake.usgs.gov/earthquakes/eventpage/ci41537288
+ci41536408,2026-08-25T20:17:07.170Z,33.23933,-116.06683,3.06,4.30,"12 km WSW of Salton City, CA",3.0–3.9,ml,reviewed,0,7,146,https://earthquake.usgs.gov/earthquakes/eventpage/ci41536408
+tx2026qrxvuk,2026-08-25T09:17:06.589Z,31.69200,-104.30200,2.70,7.33,"54 km S of Whites City, New Mexico",2.5–2.9,ml,reviewed,0,,112,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026qrxvuk
+us6000tn9b,2026-08-24T22:51:23.883Z,35.26360,-107.55100,2.70,7.62,"11 km SE of San Mateo, New Mexico",2.5–2.9,ml,reviewed,0,,112,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tn9b
+nc75424162,2026-08-24T13:23:10.670Z,37.44633,-118.83334,2.85,2.06,"19 km SW of Toms Place, CA",2.5–2.9,md,automatic,0,,125,https://earthquake.usgs.gov/earthquakes/eventpage/nc75424162
+nc75424082,2026-08-24T09:39:40.640Z,37.44550,-118.83283,2.78,2.05,"19 km SW of Toms Place, CA",2.5–2.9,md,automatic,0,,119,https://earthquake.usgs.gov/earthquakes/eventpage/nc75424082
+ci41534880,2026-08-24T07:51:44.630Z,36.06667,-117.84350,2.71,2.31,"10 km ENE of Coso Junction, CA",2.5–2.9,ml,reviewed,0,,113,https://earthquake.usgs.gov/earthquakes/eventpage/ci41534880
+nc75423527,2026-08-23T09:37:08.200Z,39.49667,-122.94650,2.75,10.90,"10 km N of Lake Pillsbury, CA",2.5–2.9,md,automatic,0,,116,https://earthquake.usgs.gov/earthquakes/eventpage/nc75423527
+ci41533512,2026-08-23T08:15:17.820Z,36.06117,-117.83750,2.65,2.63,"10 km E of Coso Junction, CA",2.5–2.9,ml,reviewed,0,,108,https://earthquake.usgs.gov/earthquakes/eventpage/ci41533512
+ci41533416,2026-08-23T07:59:55.920Z,36.06717,-117.83867,3.96,2.83,"10 km ENE of Coso Junction, CA",3.0–3.9,mw,reviewed,0,8,244,https://earthquake.usgs.gov/earthquakes/eventpage/ci41533416
+us6000tms8,2026-08-22T10:19:13.862Z,35.31300,-107.53300,4.10,10.00,"10 km ESE of San Mateo, New Mexico",4.0–4.9,mb,reviewed,0,39,273,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tms8
+nn00923660,2026-08-21T21:53:51.693Z,37.21410,-117.12020,2.58,8.28,"46 km NW of Beatty, Nevada",2.5–2.9,ml,reviewed,0,,102,https://earthquake.usgs.gov/earthquakes/eventpage/nn00923660
+ci41532240,2026-08-21T17:26:17.660Z,36.06850,-117.84183,3.29,2.54,"10 km ENE of Coso Junction, CA",3.0–3.9,ml,reviewed,0,3,167,https://earthquake.usgs.gov/earthquakes/eventpage/ci41532240
+nc75422337,2026-08-21T11:10:57.000Z,40.55967,-124.23283,2.57,13.29,"3 km SE of Ferndale, CA",2.5–2.9,md,automatic,0,,102,https://earthquake.usgs.gov/earthquakes/eventpage/nc75422337
+uu80149666,2026-08-21T07:09:24.920Z,41.56200,-109.87250,3.12,-2.84,"2 km NNW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,1,150,https://earthquake.usgs.gov/earthquakes/eventpage/uu80149666
+us6000tm40,2026-08-20T13:36:46.947Z,34.81690,-108.58100,2.90,10.00,"20 km NNE of Fence Lake, New Mexico",2.5–2.9,ml,reviewed,0,,129,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tm40
+nn00923566,2026-08-20T08:27:02.155Z,38.44200,-116.50650,2.58,6.29,"75 km ENE of Tonopah, Nevada",2.5–2.9,ml,reviewed,0,,102,https://earthquake.usgs.gov/earthquakes/eventpage/nn00923566
+nn00923526,2026-08-19T20:05:08.816Z,37.04820,-114.78800,2.59,5.68,"44 km NNW of Moapa Town, Nevada",2.5–2.9,ml,reviewed,0,,103,https://earthquake.usgs.gov/earthquakes/eventpage/nn00923526
+us6000tltz,2026-08-19T06:17:46.804Z,49.42390,-119.34200,2.90,10.00,"18 km ENE of Okanagan Falls, Canada",2.5–2.9,ml,reviewed,0,30,140,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tltz
+nn00923474,2026-08-19T01:59:46.596Z,38.43120,-116.49630,2.85,11.42,"75 km ENE of Tonopah, Nevada",2.5–2.9,ml,reviewed,0,0,125,https://earthquake.usgs.gov/earthquakes/eventpage/nn00923474
+nn00923448,2026-08-18T18:00:14.145Z,39.33360,-119.01300,2.54,7.10,"20 km ESE of Silver Springs, Nevada",2.5–2.9,ml,reviewed,0,,99,https://earthquake.usgs.gov/earthquakes/eventpage/nn00923448
+nn00923438,2026-08-18T15:12:03.666Z,38.44210,-116.51210,2.77,6.13,"75 km ENE of Tonopah, Nevada",2.5–2.9,ml,reviewed,0,,118,https://earthquake.usgs.gov/earthquakes/eventpage/nn00923438
+ci41529160,2026-08-18T13:12:45.770Z,33.76233,-119.21400,2.69,0.74,"35 km NNW of Santa Barbara Is., CA",2.5–2.9,ml,reviewed,0,3,112,https://earthquake.usgs.gov/earthquakes/eventpage/ci41529160
+us6000tlkr,2026-08-18T06:03:30.256Z,34.58760,-107.03490,2.50,4.92,"23 km W of Pueblitos, New Mexico",2.5–2.9,ml,reviewed,0,,96,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tlkr
+nc75420282,2026-08-17T22:13:10.050Z,40.33500,-124.85717,3.17,14.67,"49 km W of Petrolia, CA",3.0–3.9,ml,automatic,0,,155,https://earthquake.usgs.gov/earthquakes/eventpage/nc75420282
+ci40674314,2026-08-17T09:42:46.870Z,34.53450,-120.47567,2.66,4.81,"12 km S of Lompoc, CA",2.5–2.9,ml,reviewed,0,1,109,https://earthquake.usgs.gov/earthquakes/eventpage/ci40674314
+ci40674002,2026-08-16T20:35:29.250Z,34.01150,-117.58900,2.78,5.59,"6 km SE of Ontario, CA",2.5–2.9,ml,reviewed,0,128,168,https://earthquake.usgs.gov/earthquakes/eventpage/ci40674002
+usd0015e7e,2026-08-16T09:57:38.788Z,31.20090,-109.27160,4.00,16.42,"30 km ESE of Agua Prieta, Mexico",4.0–4.9,mb,reviewed,0,,246,https://earthquake.usgs.gov/earthquakes/eventpage/usd0015e7e
+nc75419292,2026-08-16T06:41:37.550Z,35.43883,-120.72117,2.53,7.01,"7 km SW of Atascadero, CA",2.5–2.9,md,reviewed,0,61,114,https://earthquake.usgs.gov/earthquakes/eventpage/nc75419292
+us6000tl5f,2026-08-16T04:34:05.414Z,43.53270,-110.76450,2.60,5.76,"5 km N of Jackson, Wyoming",2.5–2.9,ml,reviewed,0,50,123,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tl5f
+ci40672930,2026-08-15T01:05:14.940Z,31.50350,-116.93317,3.25,14.11,"42 km SW of Maneadero, B.C., MX",3.0–3.9,ml,reviewed,0,,162,https://earthquake.usgs.gov/earthquakes/eventpage/ci40672930
+nc75418367,2026-08-14T20:38:32.160Z,37.44817,-118.83967,3.29,2.44,"19 km SW of Toms Place, CA",3.0–3.9,ml,reviewed,0,5,168,https://earthquake.usgs.gov/earthquakes/eventpage/nc75418367
+nc75418182,2026-08-14T12:11:42.460Z,40.28150,-124.28317,2.57,10.63,"5 km S of Petrolia, CA",2.5–2.9,md,reviewed,0,,102,https://earthquake.usgs.gov/earthquakes/eventpage/nc75418182
+us6000tkkg,2026-08-13T23:42:48.442Z,46.51320,-103.40490,2.60,5.00,"7 km WNW of Amidon, North Dakota",2.5–2.9,mb_lg,reviewed,0,,104,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tkkg
+ok2026pvbc,2026-08-13T23:26:17.980Z,34.68050,-95.98400,2.67,7.00,"5 km NE of Wardville, Oklahoma",2.5–2.9,ml,reviewed,0,,110,https://earthquake.usgs.gov/earthquakes/eventpage/ok2026pvbc
+nc75417557,2026-08-13T15:30:04.700Z,37.75517,-122.15017,3.84,5.55,"3 km N of San Leandro, CA",3.0–3.9,mw,reviewed,0,7876,607,https://earthquake.usgs.gov/earthquakes/eventpage/nc75417557
+ci40671666,2026-08-13T09:31:18.030Z,32.91300,-116.24967,2.63,7.82,"28 km SSW of Ocotillo Wells, CA",2.5–2.9,ml,reviewed,0,1,107,https://earthquake.usgs.gov/earthquakes/eventpage/ci40671666
+tx2026pvrppd,2026-08-13T06:30:25.846Z,31.84500,-101.71000,2.60,8.37,"21 km W of Garden City, Texas",2.5–2.9,ml,reviewed,0,,104,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026pvrppd
+ci40671466,2026-08-12T20:56:29.310Z,34.38450,-118.62867,2.63,4.22,"9 km SW of Valencia, CA",2.5–2.9,ml,reviewed,0,106,147,https://earthquake.usgs.gov/earthquakes/eventpage/ci40671466
+nc75416672,2026-08-12T10:28:21.440Z,38.81384,-122.80634,3.20,2.79,"6 km NW of The Geysers, CA",3.0–3.9,ml,automatic,0,6,160,https://earthquake.usgs.gov/earthquakes/eventpage/nc75416672
+ci40670922,2026-08-12T06:17:06.400Z,33.83333,-117.66183,3.04,2.80,"10 km WSW of Corona, CA",3.0–3.9,ml,reviewed,0,402,279,https://earthquake.usgs.gov/earthquakes/eventpage/ci40670922
+nn00923208,2026-08-12T04:10:31.556Z,38.13620,-117.97700,2.62,10.99,"30 km SSE of Mina, Nevada",2.5–2.9,ml,reviewed,0,,106,https://earthquake.usgs.gov/earthquakes/eventpage/nn00923208
+nc75416217,2026-08-11T21:34:57.190Z,38.82617,-122.80483,2.99,2.76,"7 km NW of The Geysers, CA",2.5–2.9,ml,automatic,0,10,140,https://earthquake.usgs.gov/earthquakes/eventpage/nc75416217
+uw714075502,2026-08-11T16:23:52.580Z,46.39017,-120.60900,3.09,11.81,"5 km WSW of Harrah, Washington",3.0–3.9,ml,reviewed,0,57,165,https://earthquake.usgs.gov/earthquakes/eventpage/uw714075502
+nc75415712,2026-08-11T10:20:40.960Z,36.57017,-121.19383,2.57,2.82,"6 km NW of Pinnacles, CA",2.5–2.9,md,reviewed,0,,102,https://earthquake.usgs.gov/earthquakes/eventpage/nc75415712
+uu80148271,2026-08-11T08:00:28.270Z,41.56000,-109.88600,3.29,-1.73,"2 km NW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,1,167,https://earthquake.usgs.gov/earthquakes/eventpage/uu80148271
+nc75415272,2026-08-10T18:26:02.830Z,40.02900,-123.45617,2.62,7.83,"32 km NW of Covelo, CA",2.5–2.9,md,reviewed,0,,106,https://earthquake.usgs.gov/earthquakes/eventpage/nc75415272
+nc75415107,2026-08-10T06:05:30.760Z,38.78000,-122.78083,2.57,3.21,"2 km W of The Geysers, CA",2.5–2.9,md,reviewed,0,1,102,https://earthquake.usgs.gov/earthquakes/eventpage/nc75415107
+nc75414997,2026-08-10T02:39:01.870Z,36.58217,-121.17300,2.92,4.38,"6 km NNW of Pinnacles, CA",2.5–2.9,md,reviewed,0,1,131,https://earthquake.usgs.gov/earthquakes/eventpage/nc75414997
+ok2026pmwd,2026-08-09T11:50:50.280Z,34.66367,-95.97867,2.94,5.28,"4 km ENE of Wardville, Oklahoma",2.5–2.9,ml,reviewed,0,1,133,https://earthquake.usgs.gov/earthquakes/eventpage/ok2026pmwd
+ci40669178,2026-08-09T06:37:39.650Z,34.53350,-120.48650,2.82,5.30,"12 km SSW of Lompoc, CA",2.5–2.9,ml,reviewed,0,50,137,https://earthquake.usgs.gov/earthquakes/eventpage/ci40669178
+mb90204648,2026-08-09T04:27:03.190Z,44.44050,-114.13650,2.56,14.66,"10 km SE of Challis, Idaho",2.5–2.9,ml,reviewed,0,,101,https://earthquake.usgs.gov/earthquakes/eventpage/mb90204648
+uw714074012,2026-08-09T02:20:38.160Z,47.97117,-123.17350,2.51,46.40,"11 km SSW of River Road, Washington",2.5–2.9,ml,reviewed,0,2,97,https://earthquake.usgs.gov/earthquakes/eventpage/uw714074012
+ok2026plrc,2026-08-08T20:10:15.400Z,34.66700,-95.98150,2.69,5.31,"4 km ENE of Wardville, Oklahoma",2.5–2.9,ml,reviewed,0,1,112,https://earthquake.usgs.gov/earthquakes/eventpage/ok2026plrc
+us6000tj8z,2026-08-08T12:30:42.526Z,34.05270,-107.08530,3.20,11.49,"16 km ESE of Magdalena, New Mexico",3.0–3.9,ml,reviewed,0,2,158,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tj8z
+tx2026pmpsus,2026-08-08T07:53:32.208Z,31.64100,-104.38300,2.60,6.41,"59 km S of Whites City, New Mexico",2.5–2.9,ml,reviewed,0,,104,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026pmpsus
+nc75413432,2026-08-07T15:46:44.810Z,36.57750,-121.17867,3.10,3.97,"6 km NNW of Pinnacles, CA",3.0–3.9,ml,reviewed,0,2,148,https://earthquake.usgs.gov/earthquakes/eventpage/nc75413432
+nc75413352,2026-08-07T14:27:56.370Z,36.57567,-121.17300,3.04,4.07,"6 km NNW of Pinnacles, CA",3.0–3.9,ml,reviewed,0,1,142,https://earthquake.usgs.gov/earthquakes/eventpage/nc75413352
+nn00923036,2026-08-07T09:00:53.261Z,38.81000,-116.03470,2.79,0.00,"78 km S of Eureka, Nevada",2.5–2.9,ml,reviewed,0,,120,https://earthquake.usgs.gov/earthquakes/eventpage/nn00923036
+ci40667530,2026-08-06T22:38:38.940Z,31.58217,-115.76067,3.01,8.66,"78 km E of Maneadero, B.C., MX",3.0–3.9,ml,reviewed,0,,139,https://earthquake.usgs.gov/earthquakes/eventpage/ci40667530
+nc75412297,2026-08-06T02:24:11.240Z,40.41900,-122.28083,2.70,17.38,"4 km SSE of Anderson, CA",2.5–2.9,md,reviewed,0,1,112,https://earthquake.usgs.gov/earthquakes/eventpage/nc75412297
+nc75412167,2026-08-05T22:20:58.590Z,40.02450,-123.44600,3.88,8.33,"31 km NNW of Covelo, CA",3.0–3.9,mw,reviewed,0,8,235,https://earthquake.usgs.gov/earthquakes/eventpage/nc75412167
+tx2026phcqoh,2026-08-05T07:56:31.605Z,31.64800,-104.40800,2.60,7.28,"58 km S of Whites City, New Mexico",2.5–2.9,ml,reviewed,0,,104,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026phcqoh
+tx2026pgvjqb,2026-08-05T04:17:04.073Z,31.64400,-104.37900,2.50,6.10,"58 km S of Whites City, New Mexico",2.5–2.9,ml,reviewed,0,,96,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026pgvjqb
+nn00922819,2026-08-05T01:36:00.877Z,39.16610,-119.03660,3.29,3.00,"22 km NNE of Yerington, Nevada",3.0–3.9,mwr,reviewed,0,1,167,https://earthquake.usgs.gov/earthquakes/eventpage/nn00922819
+nc75411397,2026-08-04T21:17:33.490Z,38.79150,-122.93833,2.56,5.06,"7 km ESE of Cloverdale, CA",2.5–2.9,md,reviewed,0,9,103,https://earthquake.usgs.gov/earthquakes/eventpage/nc75411397
+nc75411307,2026-08-04T19:55:24.960Z,35.68067,-121.13733,2.80,7.22,"6 km NE of San Simeon, CA",2.5–2.9,md,reviewed,0,4,122,https://earthquake.usgs.gov/earthquakes/eventpage/nc75411307
+nm60626196,2026-08-04T12:04:40.700Z,36.10067,-89.75733,2.63,9.86,"6 km ENE of Steele, Missouri",2.5–2.9,md,reviewed,0,9,108,https://earthquake.usgs.gov/earthquakes/eventpage/nm60626196
+tx2026pehrsv,2026-08-03T19:15:16.866Z,31.17000,-103.48200,2.50,3.13,"22 km SSE of Lindsay, Texas",2.5–2.9,ml,reviewed,0,,96,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026pehrsv
+uu80146951,2026-08-03T04:29:50.120Z,41.56333,-109.86667,3.12,0.47,"2 km NNW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,,150,https://earthquake.usgs.gov/earthquakes/eventpage/uu80146951
+nc75410402,2026-08-03T03:22:37.840Z,40.29483,-124.37817,2.59,17.47,"9 km WSW of Petrolia, CA",2.5–2.9,md,reviewed,0,,103,https://earthquake.usgs.gov/earthquakes/eventpage/nc75410402
+us6000thpi,2026-08-03T00:33:17.167Z,46.76220,-71.37330,2.70,10.48,"3 km SSW of L'Ancienne-Lorette, Canada",2.5–2.9,mb_lg,reviewed,0,19,117,https://earthquake.usgs.gov/earthquakes/eventpage/us6000thpi
+us6000thm1,2026-08-02T13:10:46.579Z,27.21040,-111.26320,5.10,10.00,"79 km ENE of Mulegé, Mexico",5.0+,mww,reviewed,0,,400,https://earthquake.usgs.gov/earthquakes/eventpage/us6000thm1
+nc75409887,2026-08-01T22:58:29.510Z,37.26767,-118.28917,2.73,6.33,"9 km E of Wilkerson, CA",2.5–2.9,md,reviewed,0,,115,https://earthquake.usgs.gov/earthquakes/eventpage/nc75409887
+nc75409602,2026-08-01T11:50:40.700Z,38.77617,-122.93550,2.68,4.10,"8 km ESE of Cloverdale, CA",2.5–2.9,md,automatic,0,5,112,https://earthquake.usgs.gov/earthquakes/eventpage/nc75409602
+tx2026ozyipl,2026-08-01T10:16:13.074Z,31.72900,-101.67800,2.80,8.33,"23 km SW of Garden City, Texas",2.5–2.9,ml,reviewed,0,,121,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026ozyipl
+nc75409452,2026-08-01T07:57:45.720Z,38.77667,-122.93967,3.67,6.69,"7 km ESE of Cloverdale, CA",3.0–3.9,mw,reviewed,0,190,283,https://earthquake.usgs.gov/earthquakes/eventpage/nc75409452
+nc75409242,2026-07-31T20:02:42.480Z,36.96750,-121.45467,2.92,5.01,"11 km ESE of Gilroy, CA",2.5–2.9,md,reviewed,0,8,133,https://earthquake.usgs.gov/earthquakes/eventpage/nc75409242
+us6000th8h,2026-07-31T15:37:50.635Z,38.66310,-97.12860,2.50,10.00,"5 km SW of Hope, Kansas",2.5–2.9,mb_lg,reviewed,0,,96,https://earthquake.usgs.gov/earthquakes/eventpage/us6000th8h
+nc75408617,2026-07-30T15:34:57.070Z,37.50067,-118.84150,3.42,7.26,"16 km WSW of Toms Place, CA",3.0–3.9,ml,reviewed,0,26,188,https://earthquake.usgs.gov/earthquakes/eventpage/nc75408617
+us6000tgte,2026-07-29T20:56:01.180Z,40.68580,-109.48770,3.10,0.00,"24 km NNE of Maeser, Utah",3.0–3.9,ml,reviewed,0,1,148,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tgte
+nc75407567,2026-07-29T02:40:44.020Z,38.77633,-122.94917,3.05,7.76,"7 km ESE of Cloverdale, CA",3.0–3.9,md,reviewed,0,11,147,https://earthquake.usgs.gov/earthquakes/eventpage/nc75407567
+tx2026otilpb,2026-07-28T19:48:54.826Z,31.66500,-104.35700,2.50,6.25,"56 km S of Whites City, New Mexico",2.5–2.9,ml,reviewed,0,,96,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026otilpb
+tx2026osawci,2026-07-28T02:55:15.435Z,31.67200,-104.36300,3.30,6.42,"55 km S of Whites City, New Mexico",3.0–3.9,ml,reviewed,0,,168,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026osawci
+tx2026ortuwy,2026-07-27T23:23:02.096Z,31.84000,-102.68400,3.50,9.91,"16 km SSW of Goldsmith, Texas",3.0–3.9,ml,reviewed,0,4,190,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026ortuwy
+nn00922405,2026-07-27T16:13:58.610Z,39.31470,-119.07420,2.96,4.55,"17 km SE of Silver Springs, Nevada",2.5–2.9,ml,reviewed,0,1,135,https://earthquake.usgs.gov/earthquakes/eventpage/nn00922405
+nc75406687,2026-07-27T15:29:56.910Z,38.78900,-122.72467,2.65,1.40,"3 km ENE of The Geysers, CA",2.5–2.9,md,reviewed,0,0,108,https://earthquake.usgs.gov/earthquakes/eventpage/nc75406687
+us7000t3n8,2026-07-27T11:36:12.484Z,34.04360,-106.99940,2.60,8.51,"10 km W of Socorro, New Mexico",2.5–2.9,ml,reviewed,0,1,104,https://earthquake.usgs.gov/earthquakes/eventpage/us7000t3n8
+us7000t3lr,2026-07-27T06:40:15.895Z,36.85730,-104.83100,3.40,5.00,"30 km SSW of Segundo, Colorado",3.0–3.9,mwr,reviewed,0,4,179,https://earthquake.usgs.gov/earthquakes/eventpage/us7000t3lr
+tx2026oqgtjm,2026-07-27T03:47:48.540Z,31.65400,-104.36900,2.80,6.10,"57 km S of Whites City, New Mexico",2.5–2.9,ml,reviewed,0,,121,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026oqgtjm
+tx2026ookght,2026-07-26T03:21:05.723Z,32.11100,-101.84000,2.80,6.49,"5 km WSW of Stanton, Texas",2.5–2.9,ml,reviewed,0,7,123,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026ookght
+uu80146416,2026-07-25T20:32:21.750Z,41.55667,-109.88300,3.28,-2.19,"2 km NW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,1,166,https://earthquake.usgs.gov/earthquakes/eventpage/uu80146416
+tx2026onfbfb,2026-07-25T11:39:34.811Z,31.51900,-104.15000,2.60,8.18,"40 km WNW of Toyah, Texas",2.5–2.9,ml,reviewed,0,,104,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026onfbfb
+ci40660970,2026-07-25T01:27:20.820Z,33.18200,-115.60550,2.95,4.61,"10 km SW of Niland, CA",2.5–2.9,ml,reviewed,0,3,135,https://earthquake.usgs.gov/earthquakes/eventpage/ci40660970
+nc75405277,2026-07-24T23:20:27.030Z,39.92000,-120.41317,2.56,4.03,"8 km NE of Lake Davis, CA",2.5–2.9,md,reviewed,0,4,102,https://earthquake.usgs.gov/earthquakes/eventpage/nc75405277
+nn00922278,2026-07-24T15:47:08.358Z,38.32020,-118.74140,2.56,6.80,"24 km SSW of Hawthorne, Nevada",2.5–2.9,ml,reviewed,0,,101,https://earthquake.usgs.gov/earthquakes/eventpage/nn00922278
+nn00922257,2026-07-24T09:35:37.349Z,38.44680,-116.51550,2.67,7.39,"75 km ENE of Tonopah, Nevada",2.5–2.9,ml,reviewed,0,,110,https://earthquake.usgs.gov/earthquakes/eventpage/nn00922257
+ci40660218,2026-07-23T16:24:29.000Z,32.91167,-115.52150,3.24,14.73,"7 km S of Brawley, CA",3.0–3.9,ml,reviewed,0,9,164,https://earthquake.usgs.gov/earthquakes/eventpage/ci40660218
+tx2026ojlaky,2026-07-23T10:21:43.909Z,35.90200,-100.97600,5.00,5.69,"38 km SSE of Spearman, Texas",5.0+,ml,reviewed,0,499,714,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026ojlaky
+ci40659962,2026-07-23T09:03:52.300Z,32.91167,-115.52017,2.73,11.49,"8 km S of Brawley, CA",2.5–2.9,ml,reviewed,0,1,115,https://earthquake.usgs.gov/earthquakes/eventpage/ci40659962
+ci40659914,2026-07-23T08:49:11.760Z,32.90800,-115.52800,3.25,15.83,"8 km NNE of Imperial, CA",3.0–3.9,ml,reviewed,0,9,165,https://earthquake.usgs.gov/earthquakes/eventpage/ci40659914
+ci40659802,2026-07-23T07:31:48.370Z,32.91517,-115.53450,3.62,9.36,"7 km S of Brawley, CA",3.0–3.9,mw,reviewed,0,39,214,https://earthquake.usgs.gov/earthquakes/eventpage/ci40659802
+ci40659722,2026-07-23T07:14:20.470Z,32.91100,-115.53233,2.97,9.78,"8 km S of Brawley, CA",2.5–2.9,ml,reviewed,0,4,137,https://earthquake.usgs.gov/earthquakes/eventpage/ci40659722
+us7000t2ki,2026-07-23T02:01:05.962Z,30.29050,-113.82970,4.10,10.00,"117 km SSW of Puerto Peñasco, Mexico",4.0–4.9,mb,reviewed,0,,259,https://earthquake.usgs.gov/earthquakes/eventpage/us7000t2ki
+nn00922179,2026-07-22T17:20:52.315Z,39.09660,-119.04370,3.50,14.00,"16 km NE of Yerington, Nevada",3.0–3.9,mwr,reviewed,0,6,190,https://earthquake.usgs.gov/earthquakes/eventpage/nn00922179
+uu80145961,2026-07-22T06:09:12.780Z,42.37667,-111.39650,2.99,-1.92,"6 km WSW of Bennington, Idaho",2.5–2.9,ml,reviewed,0,7,140,https://earthquake.usgs.gov/earthquakes/eventpage/uu80145961
+nn00922060,2026-07-21T01:23:29.068Z,39.31230,-119.05200,2.78,7.83,"18 km SE of Silver Springs, Nevada",2.5–2.9,ml,reviewed,0,1,119,https://earthquake.usgs.gov/earthquakes/eventpage/nn00922060
+ci40658258,2026-07-20T09:50:17.580Z,36.06850,-117.84217,2.93,2.58,"10 km ENE of Coso Junction, CA",2.5–2.9,ml,reviewed,0,2,132,https://earthquake.usgs.gov/earthquakes/eventpage/ci40658258
+tx2026odvkzf,2026-07-20T09:08:51.131Z,32.00500,-103.24600,2.50,8.54,"12 km SSW of Jal, New Mexico",2.5–2.9,ml,reviewed,0,,96,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026odvkzf
+nc75398761,2026-07-19T05:11:30.560Z,38.81033,-122.80317,2.93,2.21,"5 km NW of The Geysers, CA",2.5–2.9,md,reviewed,0,8,134,https://earthquake.usgs.gov/earthquakes/eventpage/nc75398761
+nn00921891,2026-07-18T07:34:03.252Z,36.67640,-116.33330,3.64,9.25,"45 km SE of Beatty, Nevada",3.0–3.9,ml,reviewed,0,4,205,https://earthquake.usgs.gov/earthquakes/eventpage/nn00921891
+nc75397611,2026-07-17T10:08:48.270Z,40.85200,-121.54150,2.57,13.73,"11 km ESE of Burney, CA",2.5–2.9,md,reviewed,0,1,102,https://earthquake.usgs.gov/earthquakes/eventpage/nc75397611
+ci40656850,2026-07-17T00:58:51.480Z,33.95500,-116.73817,2.54,18.23,"6 km NE of Cabazon, CA",2.5–2.9,ml,reviewed,0,,99,https://earthquake.usgs.gov/earthquakes/eventpage/ci40656850
+ci40656658,2026-07-16T19:45:52.290Z,32.62983,-115.75017,2.62,5.02,"17 km WNW of Progreso, B.C., MX",2.5–2.9,ml,reviewed,0,,106,https://earthquake.usgs.gov/earthquakes/eventpage/ci40656658
+ci40656458,2026-07-16T15:36:27.860Z,32.62717,-115.74217,2.99,7.19,"16 km WNW of Progreso, B.C., MX",2.5–2.9,ml,reviewed,0,2,138,https://earthquake.usgs.gov/earthquakes/eventpage/ci40656458
+uu80145401,2026-07-16T10:13:14.630Z,41.55917,-109.88817,3.21,-2.16,"2 km NW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,,159,https://earthquake.usgs.gov/earthquakes/eventpage/uu80145401
+nc75396331,2026-07-15T14:58:32.870Z,38.76167,-122.92533,2.71,6.73,"9 km ESE of Cloverdale, CA",2.5–2.9,md,reviewed,0,14,117,https://earthquake.usgs.gov/earthquakes/eventpage/nc75396331
+nc75396201,2026-07-15T08:55:22.400Z,39.87567,-123.22617,2.52,7.83,"9 km NNE of Covelo, CA",2.5–2.9,md,reviewed,0,,98,https://earthquake.usgs.gov/earthquakes/eventpage/nc75396201
+tx2026nuobbt,2026-07-15T07:45:51.990Z,31.54700,-104.14500,2.60,9.34,"42 km NW of Toyah, Texas",2.5–2.9,ml,reviewed,0,,104,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026nuobbt
+nc75396126,2026-07-15T04:02:40.280Z,40.59117,-124.11983,2.62,28.64,"3 km ESE of Fortuna, CA",2.5–2.9,md,reviewed,0,,106,https://earthquake.usgs.gov/earthquakes/eventpage/nc75396126
+uu80145291,2026-07-14T14:24:15.570Z,41.55350,-109.87500,3.46,-2.85,"1 km NW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,1,184,https://earthquake.usgs.gov/earthquakes/eventpage/uu80145291
+ci41293535,2026-07-14T05:44:51.840Z,35.30933,-117.81917,2.76,8.57,"18 km WSW of Johannesburg, CA",2.5–2.9,ml,reviewed,0,,117,https://earthquake.usgs.gov/earthquakes/eventpage/ci41293535
+ci41292687,2026-07-13T16:40:55.170Z,35.31217,-117.81483,4.32,7.55,"18 km WSW of Johannesburg, CA",4.0–4.9,mw,reviewed,0,1090,667,https://earthquake.usgs.gov/earthquakes/eventpage/ci41292687
+nn00921593,2026-07-13T09:46:03.725Z,39.34750,-119.00170,2.97,6.87,"20 km ESE of Silver Springs, Nevada",2.5–2.9,ml,reviewed,0,3,136,https://earthquake.usgs.gov/earthquakes/eventpage/nn00921593
+nc75394756,2026-07-13T06:14:17.670Z,40.48383,-124.31467,2.93,21.44,"11 km SSW of Ferndale, CA",2.5–2.9,md,reviewed,0,7,134,https://earthquake.usgs.gov/earthquakes/eventpage/nc75394756
+tx2026nqkqfx,2026-07-13T01:44:51.186Z,28.83200,-98.97400,2.80,6.64,"13 km ESE of Pearsall, Texas",2.5–2.9,ml,reviewed,0,,121,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026nqkqfx
+tx2026nqayet,2026-07-12T20:52:20.714Z,28.57800,-99.11800,3.60,6.84,"11 km SSE of Dilley, Texas",3.0–3.9,ml,reviewed,0,2,200,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026nqayet
+nc75394436,2026-07-12T13:08:21.890Z,36.58233,-121.19050,2.51,5.35,"7 km NW of Pinnacles, CA",2.5–2.9,md,reviewed,0,,97,https://earthquake.usgs.gov/earthquakes/eventpage/nc75394436
+nc75394426,2026-07-12T12:04:46.840Z,36.41017,-120.39367,2.55,11.93,"13 km SSW of Cantua Creek, CA",2.5–2.9,md,reviewed,0,1,100,https://earthquake.usgs.gov/earthquakes/eventpage/nc75394426
+nc75394371,2026-07-12T08:02:03.810Z,37.31233,-118.15917,2.61,6.99,"17 km WSW of Deep Springs, CA",2.5–2.9,md,reviewed,0,1,105,https://earthquake.usgs.gov/earthquakes/eventpage/nc75394371
+nc75394216,2026-07-12T01:51:58.620Z,40.29533,-124.59733,2.59,9.03,"27 km W of Petrolia, CA",2.5–2.9,md,reviewed,0,,103,https://earthquake.usgs.gov/earthquakes/eventpage/nc75394216
+nn00921481,2026-07-11T17:40:09.869Z,37.46690,-116.70000,3.03,14.54,"54 km ESE of Goldfield, Nevada",3.0–3.9,ml,reviewed,0,,141,https://earthquake.usgs.gov/earthquakes/eventpage/nn00921481
+nc75393656,2026-07-11T03:29:17.340Z,38.80167,-122.77850,2.65,3.76,"3 km NW of The Geysers, CA",2.5–2.9,md,reviewed,0,3,109,https://earthquake.usgs.gov/earthquakes/eventpage/nc75393656
+nc75393526,2026-07-10T22:33:18.630Z,39.89433,-123.22333,2.74,10.29,"11 km N of Covelo, CA",2.5–2.9,md,reviewed,0,,116,https://earthquake.usgs.gov/earthquakes/eventpage/nc75393526
+uw714046442,2026-07-10T20:24:39.180Z,44.98650,-123.84883,2.61,43.61,"3 km SE of Rose Lodge, Oregon",2.5–2.9,ml,reviewed,0,9,107,https://earthquake.usgs.gov/earthquakes/eventpage/uw714046442
+nc75392631,2026-07-09T14:49:17.850Z,36.63533,-121.26067,3.48,10.01,"16 km NW of Pinnacles, CA",3.0–3.9,mw,reviewed,0,194,252,https://earthquake.usgs.gov/earthquakes/eventpage/nc75392631
+uu80145026,2026-07-09T09:54:06.990Z,41.55650,-109.88900,3.19,-2.74,"2 km WNW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,,157,https://earthquake.usgs.gov/earthquakes/eventpage/uu80145026
+nn00921381,2026-07-09T06:54:19.418Z,36.67340,-116.32680,2.93,9.61,"46 km SE of Beatty, Nevada",2.5–2.9,ml,reviewed,0,,132,https://earthquake.usgs.gov/earthquakes/eventpage/nn00921381
+us7000sz2h,2026-07-08T19:38:43.864Z,42.17440,-87.48620,2.90,5.00,"21 km ENE of Kenilworth, Illinois",2.5–2.9,mb_lg,reviewed,0,611,349,https://earthquake.usgs.gov/earthquakes/eventpage/us7000sz2h
+nc75391596,2026-07-07T21:30:02.490Z,38.57617,-122.45550,3.62,8.72,"0 km W of Angwin, CA",3.0–3.9,mw,reviewed,0,207,286,https://earthquake.usgs.gov/earthquakes/eventpage/nc75391596
+ci41287863,2026-07-06T12:48:02.370Z,33.45150,-118.27500,3.22,8.82,"13 km NNE of Avalon, CA",3.0–3.9,ml,reviewed,0,16,164,https://earthquake.usgs.gov/earthquakes/eventpage/ci41287863
+us6000tadn,2026-07-06T09:21:54.529Z,36.83170,-104.83200,3.80,4.19,"33 km SSW of Segundo, Colorado",3.0–3.9,ml,reviewed,0,8,225,https://earthquake.usgs.gov/earthquakes/eventpage/us6000tadn
+us6000taah,2026-07-05T16:37:28.279Z,36.69160,-106.75660,3.50,10.00,"17 km WSW of Los Ojos, New Mexico",3.0–3.9,ml,reviewed,0,1,189,https://earthquake.usgs.gov/earthquakes/eventpage/us6000taah
+nc75390041,2026-07-05T14:45:06.710Z,36.87667,-121.62383,2.96,6.78,"2 km SE of Aromas, CA",2.5–2.9,ml,reviewed,0,75,158,https://earthquake.usgs.gov/earthquakes/eventpage/nc75390041
+us6000ta7w,2026-07-05T06:45:53.603Z,36.63960,-106.84880,2.50,11.23,"26 km WSW of Los Ojos, New Mexico",2.5–2.9,ml,reviewed,0,,96,https://earthquake.usgs.gov/earthquakes/eventpage/us6000ta7w
+nn00921191,2026-07-05T00:19:19.062Z,40.09300,-115.12280,3.10,1.09,"76 km SSE of Lamoille, Nevada",3.0–3.9,ml,reviewed,0,,148,https://earthquake.usgs.gov/earthquakes/eventpage/nn00921191
+tx2026nabvvf,2026-07-04T04:08:12.984Z,32.43800,-102.11300,2.80,6.57,"36 km SSW of Los Ybanez, Texas",2.5–2.9,ml,reviewed,0,,121,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026nabvvf
+uu80143896,2026-07-03T02:56:12.400Z,41.55483,-109.88467,3.16,-1.93,"2 km WNW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,1,154,https://earthquake.usgs.gov/earthquakes/eventpage/uu80143896
+tx2026mxjgty,2026-07-02T16:38:41.305Z,32.10700,-101.89800,2.60,9.55,"10 km WSW of Stanton, Texas",2.5–2.9,ml,reviewed,0,,104,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026mxjgty
+us6000t9kv,2026-07-02T06:18:17.842Z,37.02470,-105.03510,2.80,5.00,"14 km S of Stonewall Gap, Colorado",2.5–2.9,ml,reviewed,0,1,121,https://earthquake.usgs.gov/earthquakes/eventpage/us6000t9kv
+ci41285127,2026-07-02T03:29:42.830Z,35.30600,-117.80617,3.26,7.43,"17 km WSW of Johannesburg, CA",3.0–3.9,ml,reviewed,0,3,164,https://earthquake.usgs.gov/earthquakes/eventpage/ci41285127
+tx2026mvdbvd,2026-07-01T11:22:57.446Z,32.12300,-101.92000,2.90,7.30,"12 km W of Stanton, Texas",2.5–2.9,ml,reviewed,0,5,131,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026mvdbvd
+us6000t9c6,2026-07-01T04:41:03.806Z,45.88130,-80.67230,2.60,12.93,"71 km SSE of Lively, Canada",2.5–2.9,mb_lg,reviewed,0,2,104,https://earthquake.usgs.gov/earthquakes/eventpage/us6000t9c6
+us6000t9a4,2026-06-30T21:01:34.117Z,24.66350,-109.04130,5.30,10.00,"96 km SSW of El Progreso, Mexico",5.0+,mww,reviewed,0,1,432,https://earthquake.usgs.gov/earthquakes/eventpage/us6000t9a4
+us6000taq0,2026-06-30T20:07:59.684Z,24.39680,-109.19280,4.40,10.00,"94 km NNE of Los Barriles, Mexico",4.0–4.9,mb,reviewed,0,,298,https://earthquake.usgs.gov/earthquakes/eventpage/us6000taq0
+nm60623971,2026-06-30T03:41:27.330Z,36.85283,-90.61067,2.93,1.64,"14 km SSW of Williamsville, Missouri",2.5–2.9,md,reviewed,0,23,140,https://earthquake.usgs.gov/earthquakes/eventpage/nm60623971
+nn00920893,2026-06-29T07:23:20.377Z,39.31540,-119.06240,2.52,7.46,"17 km SE of Silver Springs, Nevada",2.5–2.9,ml,reviewed,0,,98,https://earthquake.usgs.gov/earthquakes/eventpage/nn00920893
+tx2026mqovqy,2026-06-28T23:55:29.035Z,31.66100,-104.32700,2.50,6.10,"57 km S of Whites City, New Mexico",2.5–2.9,ml,reviewed,0,,96,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026mqovqy
+nc75385136,2026-06-27T07:30:48.870Z,39.76400,-120.73467,3.01,-1.56,"4 km WSW of Johnsville, CA",3.0–3.9,ml,reviewed,0,28,148,https://earthquake.usgs.gov/earthquakes/eventpage/nc75385136
+ci41496032,2026-06-26T16:36:33.450Z,33.88817,-116.16783,2.83,5.68,"19 km NNE of Indio, CA",2.5–2.9,ml,reviewed,0,9,126,https://earthquake.usgs.gov/earthquakes/eventpage/ci41496032
+uu80143376,2026-06-26T07:30:57.330Z,41.55600,-109.87600,3.26,-2.75,"1 km NW of Little America, Wyoming",3.0–3.9,ml,reviewed,0,,164,https://earthquake.usgs.gov/earthquakes/eventpage/uu80143376
+nc75384481,2026-06-26T03:03:26.550Z,40.35433,-124.98133,2.84,10.00,"59 km W of Petrolia, CA",2.5–2.9,md,reviewed,0,,124,https://earthquake.usgs.gov/earthquakes/eventpage/nc75384481
+nn00920735,2026-06-25T21:33:56.826Z,36.71580,-115.76830,2.60,5.75,"18 km NNW of Indian Springs, Nevada",2.5–2.9,ml,reviewed,0,1,104,https://earthquake.usgs.gov/earthquakes/eventpage/nn00920735
+us6000t88n,2026-06-25T18:21:36.301Z,36.98900,-104.94550,3.10,6.05,"18 km SSW of Weston, Colorado",3.0–3.9,ml,reviewed,0,,148,https://earthquake.usgs.gov/earthquakes/eventpage/us6000t88n
+nc75383706,2026-06-25T04:25:49.560Z,40.29567,-124.49100,3.12,8.27,"18 km W of Petrolia, CA",3.0–3.9,ml,reviewed,0,3,150,https://earthquake.usgs.gov/earthquakes/eventpage/nc75383706
+nc75383221,2026-06-24T17:58:22.840Z,39.37067,-123.22683,2.51,7.61,"12 km N of Redwood Valley, CA",2.5–2.9,md,reviewed,0,5,98,https://earthquake.usgs.gov/earthquakes/eventpage/nc75383221
+nc75383151,2026-06-24T16:49:43.050Z,39.37283,-123.23150,2.56,7.42,"11 km ESE of Willits, CA",2.5–2.9,md,reviewed,0,16,104,https://earthquake.usgs.gov/earthquakes/eventpage/nc75383151
+nc75382821,2026-06-24T11:02:32.150Z,40.36017,-121.95667,2.67,10.27,"10 km SW of Manton, CA",2.5–2.9,md,reviewed,0,2,110,https://earthquake.usgs.gov/earthquakes/eventpage/nc75382821
+ci41494136,2026-06-24T05:32:27.750Z,35.29950,-117.81400,2.81,8.55,"18 km WSW of Johannesburg, CA",2.5–2.9,ml,reviewed,0,1,122,https://earthquake.usgs.gov/earthquakes/eventpage/ci41494136
+tx2026mheqcy,2026-06-23T21:10:50.268Z,32.10700,-101.92000,3.10,8.67,"12 km WSW of Stanton, Texas",3.0–3.9,ml,reviewed,0,9,151,https://earthquake.usgs.gov/earthquakes/eventpage/tx2026mheqcy
+nc75382001,2026-06-23T09:03:49.370Z,36.78050,-121.39917,3.38,7.52,"5 km SW of Ridgemark, CA",3.0–3.9,ml,reviewed,0,43,196,https://earthquake.usgs.gov/earthquakes/eventpage/nc75382001
+ci10245062,2026-06-22T17:25:10.310Z,35.42450,-116.41317,2.68,2.98,"31 km NE of Fort Irwin, CA",2.5–2.9,ml,reviewed,0,,110,https://earthquake.usgs.gov/earthquakes/eventpage/ci10245062
+ci41492064,2026-06-22T05:49:46.290Z,35.95700,-117.39200,3.59,2.71,"21 km N of Searles Valley, CA",3.0–3.9,mw,reviewed,0,8,201,https://earthquake.usgs.gov/earthquakes/eventpage/ci41492064
+nc75380976,2026-06-22T00:27:23.280Z,38.79667,-122.74067,2.65,1.64,"3 km NNE of The Geysers, CA",2.5–2.9,md,reviewed,0,5,110,https://earthquake.usgs.gov/earthquakes/eventpage/nc75380976
+us7000sv12,2026-06-21T19:33:11.003Z,44.35760,-115.66510,2.90,11.14,"30 km N of Lowman, Idaho",2.5–2.9,ml,reviewed,0,,129,https://earthquake.usgs.gov/earthquakes/eventpage/us7000sv12
+nc75380806,2026-06-21T18:54:37.440Z,39.98017,-124.46233,2.57,3.23,"34 km W of Shelter Cove, CA",2.5–2.9,md,reviewed,0,,102,https://earthquake.usgs.gov/earthquakes/eventpage/nc75380806
+nc75380606,2026-06-21T07:34:24.920Z,40.34367,-124.92733,2.65,15.53,"54 km W of Petrolia, CA",2.5–2.9,md,reviewed,0,,108,https://earthquake.usgs.gov/earthquakes/eventpage/nc75380606
+nc75380386,2026-06-21T00:37:07.780Z,38.76733,-122.72550,2.90,1.50,"3 km ESE of The Geysers, CA",2.5–2.9,md,reviewed,0,9,133,https://earthquake.usgs.gov/earthquakes/eventpage/nc75380386
+uu80142961,2026-06-20T21:53:36.670Z,41.55683,-109.89767,2.94,-2.30,"3 km WNW of Little America, Wyoming",2.5–2.9,ml,reviewed,0,,133,https://earthquake.usgs.gov/earthquakes/eventpage/uu80142961
