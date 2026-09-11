@@ -173,7 +173,7 @@ const REAL_DATASETS = {
   },
   gwdChange: {
     file: "data/historical/derived/usgs_groundwater_change_2021_2025.csv",
-    name: "Groundwater change · annual mean",
+    name: "Groundwater shifts · national",
     source: "USGS Water Data API · annual well means and change from 2021 baseline",
     options: {
       role: "context",
@@ -236,7 +236,7 @@ const REAL_DATASETS = {
   },
   usgsCurrent: {
     file: "usgs_current_gwd.csv",
-    name: "USGS groundwater · nationwide latest available",
+    name: "Groundwater depth · latest snapshot",
     source: "USGS Water Data API · latest daily groundwater values",
     options: {
       role: "context",
@@ -1488,10 +1488,23 @@ function renderMultiples(visible, renderedById) {
 }
 
 function metricDescriptionMarkup(layer) {
-  if (layer.riskMetric === "groundwaterChange") return `<span class="legend-risk-note"><b>Read it:</b> negative = shallower than 2021; positive = deeper.</span>`;
+  if (layer.riskMetric === "groundwaterChange") return `<span class="legend-risk-note"><b>Read it:</b> negative = shallower than 2021; positive = deeper.</span>${groundwaterSummaryMarkup(layer)}`;
   if (layer.riskMetric === "droughtPrevalence") return `<span class="legend-risk-note"><b>Read it:</b> share of county-weeks at D1+ (moderate drought or worse).</span>`;
   if (layer.riskMetric === "hazardPotential") return `<span class="legend-risk-note"><b>Read it:</b> historical NOAA event count, not a probability forecast.</span>`;
   return "";
+}
+
+function groundwaterSummaryMarkup(layer) {
+  if (!layer?.data?.length) return "";
+  const rows = layer.data.filter((row) => (!timeFilterIsActive(layer) || rowMatchesTemporalFilter(layer, row)) && (layer.filterMode !== "filter" || rowMatchesFilter(layer, row)));
+  const changes = rows.map((row) => numericValue(row.change_from_2021_ft, Number.NaN)).filter(Number.isFinite);
+  if (!changes.length) return "";
+  const deeper = changes.filter((value) => value > 0).length / changes.length * 100; const shallower = changes.filter((value) => value < 0).length / changes.length * 100; const median = percentile(changes, .5);
+  const previous = rows.map((row) => numericValue(row.change_from_previous_ft, Number.NaN)).filter(Number.isFinite); const previousMedian = previous.length ? percentile(previous, .5) : Number.NaN;
+  const period = timeFilterIsActive(layer) ? temporalLabel(layer.timeFilterValue) : "all years";
+  const previousNote = previous.length ? ` · median vs prior year ${previousMedian >= 0 ? "+" : ""}${formatDensityValue(previousMedian)} ft` : "";
+  const population = timeFilterIsActive(layer) ? `${new Set(rows.map((row) => row.site_id)).size.toLocaleString()} wells` : `${changes.length.toLocaleString()} well-years`;
+  return `<span class="legend-risk-summary"><b>National read · ${escapeHTML(period)}:</b> ${population} · median ${median >= 0 ? "+" : ""}${formatDensityValue(median)} ft · ${Math.round(deeper)}% deeper / ${Math.round(shallower)}% shallower vs 2021${previousNote}</span>`;
 }
 
 function riskScaleMarkup(layer) {
