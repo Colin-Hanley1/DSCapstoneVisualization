@@ -26,12 +26,20 @@ const DENSITY_PALETTES = {
 const RISK_PALETTES = {
   groundwaterChange: ["#1e6f7a", "#78b5a5", "#f3efe0", "#dc8a68", "#a83d35"],
   droughtPrevalence: ["#edf3ed", "#f1d58f", "#d98b4d", "#a64335"],
-  hazardPotential: ["#eef2ed", "#e5c99f", "#ca815e", "#963b35"]
+  hazardPotential: ["#eef2ed", "#e5c99f", "#ca815e", "#963b35"],
+  nwaaAvailability: ["#9a4438", "#dfa46a", "#f1e6b9", "#9fc58d", "#3c7e69"],
+  nwaaSurfaceFlow: ["#eef5f7", "#c2dfe4", "#83bdc9", "#4b94a6", "#285f7b"],
+  nwaaUsePressure: ["#eef2ed", "#eedca9", "#d8a35e", "#bd6c43", "#8e3d35"],
+  nwaaWithdrawals: ["#f0f3ee", "#e5d3b7", "#c69c6c", "#a86b4a", "#7f3d3b"]
 };
 const RISK_METRICS = {
   groundwaterChange: { label: "Change from 2021 baseline", shortLabel: "Depth change", scaleLabel: "shallower → deeper", domain: "diverging", valueLabel: "Annual mean depth change" },
   droughtPrevalence: { label: "Share of county-weeks at D1+", shortLabel: "D1+ prevalence", scaleLabel: "lower → higher prevalence", domain: "percent", valueLabel: "Mean D1+ prevalence" },
-  hazardPotential: { label: "Reported natural-disaster events", shortLabel: "Reported events", scaleLabel: "fewer → more events", domain: "count", valueLabel: "Reported events" }
+  hazardPotential: { label: "Reported natural-disaster events", shortLabel: "Reported events", scaleLabel: "fewer → more events", domain: "count", valueLabel: "Reported events" },
+  nwaaAvailability: { label: "Modeled water availability", shortLabel: "Availability", scaleLabel: "lower → higher availability", domain: "availability", valueLabel: "Mean modeled availability" },
+  nwaaSurfaceFlow: { label: "Modeled surface-water flow", shortLabel: "Surface flow", scaleLabel: "lower → higher flow", domain: "positive", valueLabel: "Mean modeled surface-water flow" },
+  nwaaUsePressure: { label: "Surface-water use index", shortLabel: "Use pressure", scaleLabel: "lower → higher pressure", domain: "percent", valueLabel: "Mean surface-water use index" },
+  nwaaWithdrawals: { label: "Modeled total withdrawals", shortLabel: "Total withdrawals", scaleLabel: "lower → higher withdrawals", domain: "positive", valueLabel: "Modeled total withdrawals" }
 };
 const POINT_INDEX_CELL_SIZE = 40;
 const POINT_CLUSTER_MIN_ROWS = 80;
@@ -232,6 +240,90 @@ const REAL_DATASETS = {
       opacity: .72,
       detailFields: ["detail_records", "deaths", "injuries", "damage_usd", "event_types"],
       notes: "Annual state aggregation of NOAA Storm Events records from 2021 through 2025. This is historical hazard prevalence, not a probabilistic forecast; pair it with FEMA National Risk Index and local hazard studies for forward-looking potential."
+    }
+  },
+  nwaaAvailability: {
+    file: "data/historical/derived/nwaa_huc8_water_screen_2020.geojson",
+    name: "NWAA modeled availability · 2020 watershed",
+    source: "USGS NWAA + WBD · HUC8 watershed screen",
+    options: {
+      role: "context",
+      color: "#3d806d",
+      geometryDisplay: "fill",
+      riskMetric: "nwaaAvailability",
+      measureField: "availability_mean_mm_mo",
+      labelField: "name",
+      timeField: "year",
+      defaultTimeValue: "2020",
+      units: "mm/mo",
+      opacity: .64,
+      strokeWidth: .45,
+      maxRenderFeatures: 2300,
+      detailFields: ["states", "huc12_count", "surface_flow_mean_mm_mo", "surface_use_index_pct", "consumptive_use_mean_mm_mo", "recharge_mean_mm_mo", "aggregation_note"],
+      notes: "Modeled NWAA availability summarized from HUC12 records to HUC8 watersheds. Depth-equivalent fields are unweighted means across child HUC12s; this is a basin-scale screening context, not a permitted supply or site-specific water study. The current display uses the validated 2020 snapshot; older years will be added after a rate-limit-safe source refresh."
+    }
+  },
+  nwaaSurfaceFlow: {
+    file: "data/historical/derived/nwaa_huc8_water_screen_2020.geojson",
+    name: "NWAA surface-water flow · 2020 watershed",
+    source: "USGS NWAA + WBD · HUC8 watershed screen",
+    options: {
+      role: "context",
+      color: "#3d7890",
+      geometryDisplay: "fill",
+      riskMetric: "nwaaSurfaceFlow",
+      measureField: "surface_flow_mean_mm_mo",
+      labelField: "name",
+      timeField: "year",
+      defaultTimeValue: "2020",
+      units: "mm/mo",
+      opacity: .64,
+      strokeWidth: .45,
+      maxRenderFeatures: 2300,
+      detailFields: ["states", "huc12_count", "availability_mean_mm_mo", "surface_use_index_pct", "consumptive_use_mean_mm_mo", "baseflow_mean_mm_mo", "runoff_mean_mm_mo", "aggregation_note"],
+      notes: "Modeled NWAA streamflow expressed as a depth-equivalent monthly mean and summarized to HUC8 watersheds. It is not a seasonal hydrograph or live gage reading; use USGS gage records for site-level low-flow and seasonality analysis."
+    }
+  },
+  nwaaUsePressure: {
+    file: "data/historical/derived/nwaa_huc8_water_screen_2020.geojson",
+    name: "NWAA surface-water use pressure · 2020 watershed",
+    source: "USGS NWAA + WBD · HUC8 watershed screen",
+    options: {
+      role: "context",
+      color: "#a45d42",
+      geometryDisplay: "fill",
+      riskMetric: "nwaaUsePressure",
+      measureField: "surface_use_index_pct",
+      labelField: "name",
+      timeField: "year",
+      defaultTimeValue: "2020",
+      units: "% index",
+      opacity: .64,
+      strokeWidth: .45,
+      maxRenderFeatures: 2300,
+      detailFields: ["states", "huc12_count", "availability_mean_mm_mo", "surface_flow_mean_mm_mo", "consumptive_use_mean_mm_mo", "total_withdrawal_mgd", "surface_water_withdrawal_mgd", "groundwater_withdrawal_mgd", "aggregation_note"],
+      notes: "Source-provided NWAA surface-water use index, converted from a fraction to percent and summarized to HUC8 watersheds. Treat it as a modeled pressure signal, not a composite score or a legal allocation determination."
+    }
+  },
+  nwaaWithdrawals: {
+    file: "data/historical/derived/nwaa_huc8_water_screen_2020.geojson",
+    name: "NWAA modeled withdrawals · 2020 watershed",
+    source: "USGS NWAA + WBD · HUC8 watershed screen",
+    options: {
+      role: "context",
+      color: "#8f5546",
+      geometryDisplay: "fill",
+      riskMetric: "nwaaWithdrawals",
+      measureField: "total_withdrawal_mgd",
+      labelField: "name",
+      timeField: "year",
+      defaultTimeValue: "2020",
+      units: "MGD",
+      opacity: .64,
+      strokeWidth: .45,
+      maxRenderFeatures: 2300,
+      detailFields: ["states", "huc12_count", "irrigation_withdrawal_mgd", "public_supply_withdrawal_mgd", "thermoelectric_withdrawal_mgd", "surface_water_withdrawal_mgd", "groundwater_withdrawal_mgd", "aggregation_note"],
+      notes: "Modeled irrigation, public-supply, and thermoelectric withdrawals summed across child HUC12 records and summarized to HUC8 watersheds. This shows demand context; it is not a measure of remaining capacity or a site-specific competition score."
     }
   },
   usgsCurrent: {
@@ -602,6 +694,8 @@ function measureDomain(layer, values) {
   }
   if (metric?.domain === "percent") return [0, 100];
   if (metric?.domain === "count") return [0, Math.max(1, percentile(finiteValues, .95))];
+  if (metric?.domain === "positive") return [0, Math.max(1, percentile(finiteValues, .95))];
+  if (metric?.domain === "availability") return [percentile(finiteValues, .05), Math.max(percentile(finiteValues, .05), percentile(finiteValues, .95))];
   return [percentile(finiteValues, .05), Math.max(percentile(finiteValues, .05), percentile(finiteValues, .95))];
 }
 
@@ -1348,7 +1442,7 @@ function renderGeometryVisual(layer, row, index, value, max) {
   }
   const path = pathFromGeometry(geometry); if (!path) return { markup: "", count: 0 };
   const quiet = mapPresentation === "focus" && hasVisibleSelectedLayer() && layer.id !== selectedLayerId; const shouldFill = !quiet && (layer.geometryDisplay === "fill" || (layer.geometryDisplay === "auto" && ["candidate", "constraint"].includes(layer.role)));
-  const aquiferFeature = isAquiferLikeLayer(layer) && ["Polygon", "MultiPolygon"].includes(geometry.type); const geometryColor = quiet ? "#66868a" : featureColor(layer, row); const fill = !quiet && (shouldFill || aquiferFeature) ? geometryColor : "none"; const fillOpacity = quiet ? 0 : shouldFill ? Math.min(.58, Math.max(.12, Number(layer.opacity) * .45)) : aquiferFeature ? .025 : 0; const baseStrokeWidth = Math.max(.35, Number(layer.strokeWidth) || 1.5); const lineMeasure = layer.lineWidthByMeasure ? numericValue(row[layer.measureField], Number.NaN) : Number.NaN; const lineRatio = Number.isFinite(lineMeasure) && layer._measureMax > 0 ? Math.sqrt(clamp(lineMeasure / layer._measureMax, 0, 1)) : 0; const namedLine = layer.emphasizeNamedLines && String(row[layer.labelField] ?? "").trim() && (String(row.FTYPE ?? "").toLowerCase() === "artificialpath" || String(row.FTYPE ?? "").toLowerCase() === "namedrivercorridor" || Number(row.SEGMENTS) > 0); const encodedStrokeWidth = layer.lineWidthByMeasure ? baseStrokeWidth * (.9 + lineRatio * 1.6) : baseStrokeWidth; const strokeWidth = quiet ? Math.max(.45, baseStrokeWidth * .65) : encodedStrokeWidth * (namedLine ? 1.55 : 1); const label = featureLabel(row, layer, index); const units = layer.units ? ` ${layer.units}` : ""; const measure = layer.measureField && row[layer.measureField] !== undefined ? ` · ${row[layer.measureField]}${units}` : "";
+  const aquiferFeature = isAquiferLikeLayer(layer) && ["Polygon", "MultiPolygon"].includes(geometry.type); const riskValue = numericValue(value, Number.NaN); const geometryColor = quiet ? "#66868a" : layer.riskMetric && Number.isFinite(riskValue) ? interpolatePaletteColor(measureRatio(layer, riskValue, layer.renderGeometryDomain), riskPalette(layer)) : featureColor(layer, row); const fill = !quiet && (shouldFill || aquiferFeature) ? geometryColor : "none"; const fillOpacity = quiet ? 0 : shouldFill ? Math.min(.58, Math.max(.12, Number(layer.opacity) * .45)) : aquiferFeature ? .025 : 0; const baseStrokeWidth = Math.max(.35, Number(layer.strokeWidth) || 1.5); const lineMeasure = layer.lineWidthByMeasure ? numericValue(row[layer.measureField], Number.NaN) : Number.NaN; const lineRatio = Number.isFinite(lineMeasure) && layer._measureMax > 0 ? Math.sqrt(clamp(lineMeasure / layer._measureMax, 0, 1)) : 0; const namedLine = layer.emphasizeNamedLines && String(row[layer.labelField] ?? "").trim() && (String(row.FTYPE ?? "").toLowerCase() === "artificialpath" || String(row.FTYPE ?? "").toLowerCase() === "namedrivercorridor" || Number(row.SEGMENTS) > 0); const encodedStrokeWidth = layer.lineWidthByMeasure ? baseStrokeWidth * (.9 + lineRatio * 1.6) : baseStrokeWidth; const strokeWidth = quiet ? Math.max(.45, baseStrokeWidth * .65) : encodedStrokeWidth * (namedLine ? 1.55 : 1); const label = featureLabel(row, layer, index); const units = layer.units ? ` ${layer.units}` : ""; const measure = layer.measureField && row[layer.measureField] !== undefined ? ` · ${row[layer.measureField]}${units}` : "";
   return { markup: `<path class="layer-feature layer-role-${escapeHTML(layer.role || "context")}${aquiferFeature ? " aquifer-feature" : ""}" data-layer-id="${layer.id}" data-row-index="${index}" fill="${fill}" fill-opacity="${fillOpacity}" stroke="${geometryColor}" stroke-width="${strokeWidth}" vector-effect="non-scaling-stroke" pointer-events="${aquiferFeature ? "none" : "all"}" d="${path}" opacity="${filterOpacity(layer, row)}"><title>${escapeHTML(label)}${escapeHTML(measure)}</title></path>`, count: 1 };
 }
 
@@ -1456,6 +1550,7 @@ function renderLayerVisuals(layer) {
     const clusters = getPointClusters(layer); layer.renderDensityCells = []; layer.densityMode = false; layer.renderClusters = clusters; layer.clusterMode = clusters.length > 0; layer.clusteredRecordCount = clusters.reduce((total, cluster) => total + cluster.count, 0); clusteredRecordCount = layer.clusteredRecordCount; mappedCount = clusters.length; markup = clusters.map((cluster, index) => renderClusterVisual(layer, cluster, index)).join("");
   } else {
     layer.renderDensityCells = []; layer.densityMode = false; layer.renderClusters = []; layer.clusterMode = false; layer.clusteredRecordCount = 0;
+    layer.renderGeometryDomain = layer.riskMetric ? measureDomain(layer, layer.data.map((row) => numericValue(row[layer.measureField], Number.NaN))) : null;
     const renderRows = getRenderableRows(layer); const max = layer._measureMax || 1;
     markup = renderRows.map(({ row, index, point: indexedPoint }) => {
       if (!isPointLayer(layer) && layer.filterMode === "filter" && !rowMatchesFilter(layer, row)) return "";
@@ -1491,6 +1586,10 @@ function metricDescriptionMarkup(layer) {
   if (layer.riskMetric === "groundwaterChange") return `<span class="legend-risk-note"><b>Read it:</b> negative = shallower than 2021; positive = deeper.</span>${groundwaterSummaryMarkup(layer)}`;
   if (layer.riskMetric === "droughtPrevalence") return `<span class="legend-risk-note"><b>Read it:</b> share of county-weeks at D1+ (moderate drought or worse).</span>`;
   if (layer.riskMetric === "hazardPotential") return `<span class="legend-risk-note"><b>Read it:</b> historical NOAA event count, not a probability forecast.</span>`;
+  if (layer.riskMetric === "nwaaAvailability") return `<span class="legend-risk-note"><b>Read it:</b> modeled availability in HUC8 watersheds; not permitted supply.</span>`;
+  if (layer.riskMetric === "nwaaSurfaceFlow") return `<span class="legend-risk-note"><b>Read it:</b> modeled flow depth-equivalent; not seasonal gage flow.</span>`;
+  if (layer.riskMetric === "nwaaUsePressure") return `<span class="legend-risk-note"><b>Read it:</b> source NWAA surface-water use index; higher values indicate more modeled pressure.</span>`;
+  if (layer.riskMetric === "nwaaWithdrawals") return `<span class="legend-risk-note"><b>Read it:</b> modeled sector withdrawals; not remaining capacity.</span>`;
   return "";
 }
 
@@ -1510,9 +1609,9 @@ function groundwaterSummaryMarkup(layer) {
 function riskScaleMarkup(layer) {
   const metric = riskMetric(layer);
   if (!metric && !isStateLayer(layer)) return "";
-  const domain = layer.renderStateDomain || measureDomain(layer, layer.data.map((row) => numericValue(row[layer.measureField], Number.NaN)));
-  const selectedPeriod = timeFilterIsActive(layer) ? temporalLabel(layer.timeFilterValue) : layer.timeField ? "mean across available years" : "all records";
-  const capNote = metric?.domain === "count" ? " · color capped at 95th percentile" : metric?.domain === "diverging" ? " · symmetric around zero" : "";
+  const domain = layer.renderStateDomain || layer.renderGeometryDomain || measureDomain(layer, layer.data.map((row) => numericValue(row[layer.measureField], Number.NaN)));
+  const selectedPeriod = timeFilterIsActive(layer) ? temporalLabel(layer.timeFilterValue) : layer.timeField ? (isStateLayer(layer) ? "mean across available years" : "all available periods") : "all records";
+  const capNote = ["count", "positive"].includes(metric?.domain) ? " · color capped at 95th percentile" : metric?.domain === "availability" ? " · 5th–95th percentile" : metric?.domain === "diverging" ? " · symmetric around zero" : "";
   const palette = metric ? riskPalette(layer) : [mixHexColors("#ffffff", layer.color || "#397a82", .12), layer.color || "#397a82"];
   return `<div class="legend-scale risk-scale"><div class="legend-scale-heading"><span>${escapeHTML(metric?.shortLabel || readableFieldName(layer.measureField))}</span><span>${escapeHTML(metric?.scaleLabel || "lower → higher")}, ${escapeHTML(selectedPeriod)}${escapeHTML(capNote)}</span></div><div class="legend-gradient" style="background:linear-gradient(90deg, ${palette.join(", ")})"></div><div class="legend-scale-values"><span>${escapeHTML(formatMeasureValue(layer, domain[0]))}</span><span>${escapeHTML(formatMeasureValue(layer, domain[1]))}</span></div></div>`;
 }
@@ -1527,7 +1626,7 @@ function renderLegend() {
     const rows = groupLayers.map((layer) => {
       const selected = layer.id === selectedLayerId; const mapped = mappedRecordCount(layer); const entries = Object.entries(layer.featureColorMap || {}); const focus = activeFilterDescription(layer); const colorDescription = layer.featureColorField ? `color · ${readableFieldName(layer.featureColorField)}` : "single color";
       const densityScale = selected && layer.displayMode === "density" && layer.renderDensityCells?.length ? `<div class="legend-scale"><div class="legend-scale-heading"><span>${escapeHTML(densityAggregationLabel(layer))}</span><span>${escapeHTML(densityColorScaleLabel(layer))}</span></div><div class="legend-gradient" style="background:${densityGradient(layer)}"></div><div class="legend-scale-values"><span>${escapeHTML(formatMeasureValue(layer, layer.renderDensityCells[0].scaleMin))}</span><span>${escapeHTML(formatMeasureValue(layer, layer.renderDensityCells[0].scaleMax))}</span></div></div>` : "";
-      const stateScale = selected && isStateLayer(layer) && layer.renderStateRows?.length ? riskScaleMarkup(layer) : "";
+      const stateScale = selected && ((isStateLayer(layer) && layer.renderStateRows?.length) || (isCoverageLayer(layer) && layer.riskMetric && layer.renderGeometryDomain)) ? riskScaleMarkup(layer) : "";
       const categoryMarkup = selected && entries.length ? `<div class="legend-categories">${entries.slice(0, 8).map(([value, color]) => `<span class="legend-category" title="${escapeHTML(value)}"><span class="legend-swatch" style="background:${color}"></span>${escapeHTML(value)}</span>`).join("")}</div>${entries.length > 8 ? `<span class="legend-more">+${entries.length - 8} additional categories</span>` : ""}` : "";
       const warning = selected && layer.featureColorWarning ? `<span class="legend-more">${escapeHTML(layer.featureColorWarning)}</span>` : "";
       const detail = selected ? `<div class="legend-layer-detail"><span>${escapeHTML(layerGeometryLabel(layer))} · ${escapeHTML(isCoverageLayer(layer) || isStateLayer(layer) ? layerSurfaceDescription(layer) : layerSizeDescription(layer))}</span><span>${escapeHTML(colorDescription)}</span>${layer.clusterMode ? `<span>${layer.clusteredRecordCount.toLocaleString()} grouped at this zoom</span>` : ""}${focus ? `<span>${layer.filterMode === "filter" ? "Showing only" : "Highlighting"} ${escapeHTML(focus)}</span>` : ""}</div>${densityScale}${stateScale}${metricDescriptionMarkup(layer)}${categoryMarkup}${warning}` : `<span class="legend-layer-compact-meta">${escapeHTML(layerGeometryLabel(layer))} · ${escapeHTML(colorDescription)}</span>`;
@@ -1599,15 +1698,15 @@ function showMapFeatureTooltip(element) {
   const rowIndex = Number(element.dataset.rowIndex); const row = layer.data[rowIndex]; if (!row) return;
   const point = geometryAnchor(row, layer); if (!point) return; const label = row.__geometry ? featureLabel(row, layer, rowIndex) : getPoint(row, layer)?.label || "Mapped feature"; const units = layer.units ? ` ${layer.units}` : ""; const details = [];
   if (isAquiferLikeLayer(layer)) { const aquiferFields = inferAquiferFields(layer.fields); if (aquiferFields.name && row[aquiferFields.name] !== undefined) details.push(`Aquifer name: ${row[aquiferFields.name]}`); if (aquiferFields.type && row[aquiferFields.type] !== undefined) details.push(`Aquifer type: ${row[aquiferFields.type]}`); }
-  if (layer.measureField && row[layer.measureField] !== undefined) { const measureKey = String(layer.measureField).toLowerCase(); const measureLabel = layer.riskMetric === "groundwaterChange" ? "Change from 2021 baseline" : ["qama", "qa_ma"].includes(measureKey) ? "Mean annual flow estimate" : measureKey === "cwp_actual_average_flow_nmbr" ? "Reported average flow" : { frequency_pct: "Historical drought frequency", us_prcnt: "Outlook area share" }[measureKey] || readableFieldName(layer.measureField); details.push(`${measureLabel}: ${row[layer.measureField]}${units}`); if (layer.riskMetric === "groundwaterChange") details.push("Interpretation: positive = deeper; negative = shallower"); }
+  if (layer.measureField && row[layer.measureField] !== undefined) { const measureKey = String(layer.measureField).toLowerCase(); const measureLabel = layer.riskMetric ? riskMetric(layer)?.valueLabel || readableFieldName(layer.measureField) : ["qama", "qa_ma"].includes(measureKey) ? "Mean annual flow estimate" : measureKey === "cwp_actual_average_flow_nmbr" ? "Reported average flow" : { frequency_pct: "Historical drought frequency", us_prcnt: "Outlook area share" }[measureKey] || readableFieldName(layer.measureField); details.push(`${measureLabel}: ${row[layer.measureField]}${units}`); if (layer.riskMetric === "groundwaterChange") details.push("Interpretation: positive = deeper; negative = shallower"); }
   if (!isAquiferLikeLayer(layer) && layer.featureColorField && layer.featureColorField !== layer.labelField && row[layer.featureColorField] !== undefined) { const colorFieldKey = String(layer.featureColorField).toLowerCase(); const colorFieldLabel = { cwp_major_minor_status_flag: "Facility size class" }[colorFieldKey] || readableFieldName(layer.featureColorField); details.push(`${colorFieldLabel}: ${row[layer.featureColorField]}`); }
   if (layer.detailFields?.length) {
-    const detailLabels = { streamorde: "Stream order", totdasqkm: "Cumulative drainage area", vama: "Estimated velocity", gageidma: "USGS gage", gageqma: "Gaged mean annual flow", gageadjma: "Gage adjusted", cwp_city: "City", cwp_state: "State", cwp_county: "County", cwp_permit_status_desc: "Permit status", cwp_status: "Compliance status", cwp_major_minor_status_flag: "Facility size class", cwp_total_design_flow_nmbr: "Design flow", fac_derived_wbd_name: "Watershed", permit_name: "Permit name", permit_components: "Permit components", dfr_url: "EPA detailed report", drought_weeks: "Drought-threshold weeks", observation_weeks: "Observation weeks", drought_level: "Drought threshold", minimum_weeks: "Minimum event length", period_start: "Period start", period_end: "Period end", fips: "County FIPS", fcst_date: "Forecast release", target: "Forecast target month", area: "Outlook area", groundwater_mean_ft: "Annual mean depth-to-water", change_from_previous_ft: "Change from previous year", observation_count: "Observations", baseline_year: "Baseline year", baseline_date: "Baseline date", latest_date: "Latest date", time_series_id: "USGS time-series ID" };
+    const detailLabels = { streamorde: "Stream order", totdasqkm: "Cumulative drainage area", vama: "Estimated velocity", gageidma: "USGS gage", gageqma: "Gaged mean annual flow", gageadjma: "Gage adjusted", cwp_city: "City", cwp_state: "State", cwp_county: "County", cwp_permit_status_desc: "Permit status", cwp_status: "Compliance status", cwp_major_minor_status_flag: "Facility size class", cwp_total_design_flow_nmbr: "Design flow", fac_derived_wbd_name: "Watershed", permit_name: "Permit name", permit_components: "Permit components", dfr_url: "EPA detailed report", drought_weeks: "Drought-threshold weeks", observation_weeks: "Observation weeks", drought_level: "Drought threshold", minimum_weeks: "Minimum event length", period_start: "Period start", period_end: "Period end", fips: "County FIPS", fcst_date: "Forecast release", target: "Forecast target month", area: "Outlook area", groundwater_mean_ft: "Annual mean depth-to-water", change_from_previous_ft: "Change from previous year", observation_count: "Observations", baseline_year: "Baseline year", baseline_date: "Baseline date", latest_date: "Latest date", time_series_id: "USGS time-series ID", huc8: "HUC8", states: "States", huc12_count: "HUC12 records", availability_mean_mm_mo: "Modeled availability", surface_flow_mean_mm_mo: "Modeled surface-water flow", surface_use_index_pct: "Surface-water use index", consumptive_use_mean_mm_mo: "Modeled consumptive use", recharge_mean_mm_mo: "Modeled recharge", baseflow_mean_mm_mo: "Modeled baseflow", runoff_mean_mm_mo: "Modeled runoff", irrigation_withdrawal_mgd: "Irrigation withdrawals", public_supply_withdrawal_mgd: "Public-supply withdrawals", thermoelectric_withdrawal_mgd: "Thermoelectric withdrawals", total_withdrawal_mgd: "Total withdrawals", surface_water_withdrawal_mgd: "Surface-water withdrawals", groundwater_withdrawal_mgd: "Groundwater withdrawals", aggregation_note: "Aggregation" };
     layer.detailFields.forEach((field) => {
       const detailKey = String(field || "").toLowerCase();
       if (!field || field === layer.measureField || field === layer.featureColorField || row[field] === undefined || row[field] === null || row[field] === "" || (detailKey === "gageidma" && String(row[field]) === "0")) return;
       const value = detailKey === "gageadjma" ? (Number(row[field]) === 1 ? "yes" : "no") : row[field];
-      const detailUnits = ["totdasqkm", "lengthkm", "area"].includes(detailKey) ? detailKey === "lengthkm" ? " km" : " km²" : ["vama", "va_ma"].includes(detailKey) ? " fps" : detailKey === "gageqma" ? " cfs" : ["cwp_total_design_flow_nmbr"].includes(detailKey) ? " MGD" : ["drought_weeks", "observation_weeks", "minimum_weeks"].includes(detailKey) ? " weeks" : ["groundwater_mean_ft", "change_from_previous_ft"].includes(detailKey) ? " ft" : "";
+      const detailUnits = ["totdasqkm", "lengthkm", "area"].includes(detailKey) ? detailKey === "lengthkm" ? " km" : " km²" : ["vama", "va_ma"].includes(detailKey) ? " fps" : detailKey === "gageqma" ? " cfs" : ["cwp_total_design_flow_nmbr", "irrigation_withdrawal_mgd", "public_supply_withdrawal_mgd", "thermoelectric_withdrawal_mgd", "total_withdrawal_mgd", "surface_water_withdrawal_mgd", "groundwater_withdrawal_mgd"].includes(detailKey) ? " MGD" : ["drought_weeks", "observation_weeks", "minimum_weeks"].includes(detailKey) ? " weeks" : ["groundwater_mean_ft", "change_from_previous_ft"].includes(detailKey) ? " ft" : ["availability_mean_mm_mo", "surface_flow_mean_mm_mo", "consumptive_use_mean_mm_mo", "recharge_mean_mm_mo", "baseflow_mean_mm_mo", "runoff_mean_mm_mo"].includes(detailKey) ? " mm/mo" : detailKey === "surface_use_index_pct" ? "% index" : "";
       const detailLabel = { ...detailLabels, va_ma: "Estimated velocity", lengthkm: "Reach length", resolution: "Source resolution", comid: "NHDPlus COMID" }[detailKey] || readableFieldName(field);
       details.push(`${detailLabel}: ${value}${detailUnits}`);
     });
@@ -1907,6 +2006,37 @@ async function loadRiskLayers() {
   document.querySelector(".map-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
   showToast("Risk layers loaded · use the Time lens to compare years.");
 }
+async function loadNwaaWaterScreen() {
+  const waterKeys = ["nwaaAvailability", "nwaaSurfaceFlow", "nwaaUsePressure", "nwaaWithdrawals"];
+  if (waterKeys.every((key) => layers.some((layer) => layer.name === REAL_DATASETS[key]?.name))) {
+    showToast("NWAA water screen is already loaded.");
+    return;
+  }
+  const dataset = REAL_DATASETS.nwaaAvailability;
+  try {
+    const response = await fetch(dataset.file, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${dataset.file} could not be loaded (${response.status}).`);
+    const data = parseInput(await response.text());
+    const loaded = [];
+    waterKeys.forEach((key) => {
+      const entry = REAL_DATASETS[key];
+      if (layers.some((layer) => layer.name === entry.name)) return;
+      loaded.push(addDataLayer(data, entry.name, entry.source, entry.options));
+    });
+    if (!loaded.length) {
+      showToast("NWAA water screen is already loaded.");
+      return;
+    }
+    selectedLayerId = loaded[0].id;
+    mapPresentation = "multiples";
+    mapEmphasis = "balanced";
+    renderAll();
+    document.querySelector(".map-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    showToast("NWAA water screen loaded · use the Time lens to compare selected years.");
+  } catch (error) {
+    showToast(error.message || "Could not load the NWAA water screen.");
+  }
+}
 async function fetchWithTimeout(url, options = {}, timeout = 15000) {
   const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeout);
   try { return await fetch(url, { ...options, signal: controller.signal }); } finally { clearTimeout(timer); }
@@ -2080,6 +2210,7 @@ async function seedDemoLayers() {
 document.getElementById("newLayerButton").addEventListener("click", focusDataEntry); document.getElementById("addLayerButton").addEventListener("click", focusDataEntry); document.getElementById("focusLayerButton").addEventListener("click", focusSelectedLayer); document.getElementById("showAllLayersButton").addEventListener("click", showAllLayers); document.getElementById("pasteDataButton").addEventListener("click", focusDataEntry); document.getElementById("openFileButton").addEventListener("click", () => document.getElementById("fileInput").click()); document.getElementById("fileInput").addEventListener("change", (event) => loadFile(event.target.files[0])); document.getElementById("loadSampleFileButton").addEventListener("click", loadBundledSample); document.getElementById("createPastedLayerButton").addEventListener("click", createPastedLayer); document.getElementById("loadExampleButton").addEventListener("click", () => { els.pasteLayerName.value = "sample point observations"; els.pasteInput.value = "lat,long,gwd,year\n30.416,-87.853,35.0,2002\n30.452,-87.742,13.66,2009"; }); document.getElementById("applyPropertiesButton").addEventListener("click", applyProperties); els.geometryTypeField.addEventListener("change", toggleGeometryFields); els.displayModeField.addEventListener("change", toggleGeometryFields); els.opacityField.addEventListener("input", () => { els.opacityOutput.value = `${els.opacityField.value}%`; }); els.markerSizeField.addEventListener("input", () => { els.markerSizeOutput.value = `${els.markerSizeField.value}px`; }); els.lineWidthField.addEventListener("input", () => { els.lineWidthOutput.value = `${els.lineWidthField.value}px`; }); document.getElementById("clearLayersButton").addEventListener("click", () => { layers = []; selectedLayerId = null; aquiferLayerId = null; boundaryMode = "states"; els.boundaryModeSelect.value = "states"; els.statePaths.style.display = ""; renderAll(); els.fileStatus.textContent = "Workspace cleared · add a layer to begin"; }); document.getElementById("exportButton").addEventListener("click", exportSVG); document.getElementById("baseMapSelect").addEventListener("change", (event) => { els.mapGridRect.style.display = event.target.value === "grid" ? "block" : "none"; renderMap(); }); document.getElementById("labelModeSelect").addEventListener("change", (event) => { els.mapLabels.style.display = event.target.value === "state" ? "block" : "none"; renderMap(); }); document.getElementById("mapPresentationSelect").addEventListener("change", (event) => { mapPresentation = event.target.value; renderMap(); }); document.getElementById("layerEmphasisSelect").addEventListener("change", (event) => { mapEmphasis = event.target.value; renderMap(); }); document.getElementById("zoomInButton").addEventListener("click", () => setMapZoom(mapZoom * 1.35)); document.getElementById("zoomOutButton").addEventListener("click", () => setMapZoom(mapZoom / 1.35)); document.getElementById("resetZoomButton").addEventListener("click", resetMapView); document.getElementById("zoomToDataButton").addEventListener("click", zoomToSelectedLayer); document.getElementById("fitMapButton").addEventListener("click", () => { resetMapView(); document.getElementById("mapStage").animate([{ opacity: .72 }, { opacity: 1 }], { duration: 250 }); showToast("Map view reset."); });
 
 document.getElementById("loadRiskLayersButton").addEventListener("click", loadRiskLayers);
+document.getElementById("loadWaterScreenButton").addEventListener("click", loadNwaaWaterScreen);
 
 document.getElementById("toggleDataEntryButton").addEventListener("click", () => {
   const panel = document.getElementById("dataEntryPanel");

@@ -52,6 +52,9 @@ rerun the NWAA command; the current partial status is recorded in
   25% frequency threshold.
 - `derived/noaa_hazard_state_year_2021_2025.csv`: annual state aggregation of
   unique events, detail records, casualties, reported damage, and event types.
+- `derived/nwaa_huc8_water_screen_2020.geojson`: simplified USGS WBD HUC8
+  polygons joined to the validated 2020 NWAA snapshot, exposing separate
+  modeled availability, surface-water flow, use-index, and withdrawal measures.
 - `collection-manifest.json` and `nwaa-manifest.json`: coverage, URLs, row
   counts, and limitations.
 
@@ -72,6 +75,9 @@ NWAA is modeled and HUC12-keyed. It is useful for basin-scale baseline,
 seasonality, withdrawal pressure, and availability comparisons, but it does not
 replace local groundwater permits, well tests, surface-water rights, utility
 studies, or engineering review. Its latest complete year in this pack is 2020.
+The Atlas water screen summarizes HUC12 values to HUC8 for display. Its current
+time lens begins with the validated 2020 snapshot; older NWAA years require a
+rate-limit-safe refresh before being added.
 
 ## Next source families for the scoring model
 

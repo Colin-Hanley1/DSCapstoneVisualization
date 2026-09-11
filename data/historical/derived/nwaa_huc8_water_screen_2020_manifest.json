@@ -1,0 +1,25 @@
+{
+  "source": "USGS National Water Availability Assessment (NWAA) + USGS Watershed Boundary Dataset HUC8 geometry",
+  "source_url": "https://water.usgs.gov/nwaa-data/web-services/",
+  "geometry_url": "https://hydro.nationalmap.gov/arcgis/rest/services/wbd/MapServer/4",
+  "years": [
+    2020
+  ],
+  "geometry_level": "HUC8",
+  "aggregation": "HUC12 records summarized to HUC8; depth-equivalent model fields are unweighted means and withdrawal fields are sums.",
+  "limitation": "First display pass uses the validated 2020 snapshot. Older NWAA companion tables require a rate-limit-safe refresh before being added to the time lens.",
+  "feature_count": 2092,
+  "year_coverage": {
+    "2020": {
+      "huc8_count": 2092,
+      "source_rows": {
+        "availability": 83322,
+        "quantity": 83322,
+        "irrigation": 83322,
+        "publicSupply": 83322,
+        "thermoelectric": 83322
+      }
+    }
+  },
+  "generated_at": "2026-09-11T20:17:50.863Z"
+}

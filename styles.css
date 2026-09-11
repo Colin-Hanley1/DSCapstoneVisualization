@@ -831,6 +831,7 @@ body {
 .risk-layer-tools strong { color: #294f5d; font-size: 10px; }
 .risk-layer-tools span { color: #6c7b7e; font: 9px/1.35 var(--mono); }
 .risk-layer-tools .small-button { flex: 0 0 auto; min-height: 29px; white-space: nowrap; }
+.water-screen-tools { border-left-color: #3d7890; background: #f2f7f6; }
 
 @media (max-width: 500px) {
   .risk-layer-tools { align-items: stretch; flex-direction: column; }
