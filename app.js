@@ -23,6 +23,16 @@ const DENSITY_PALETTES = {
   greenRed: ["#2ca25f", "#a1d76a", "#fee08b", "#f46d43", "#d73027"],
   redGreen: ["#d73027", "#fc8d59", "#fee08b", "#a1d76a", "#1a9850"]
 };
+const RISK_PALETTES = {
+  groundwaterChange: ["#1e6f7a", "#78b5a5", "#f3efe0", "#dc8a68", "#a83d35"],
+  droughtPrevalence: ["#edf3ed", "#f1d58f", "#d98b4d", "#a64335"],
+  hazardPotential: ["#eef2ed", "#e5c99f", "#ca815e", "#963b35"]
+};
+const RISK_METRICS = {
+  groundwaterChange: { label: "Change from 2021 baseline", shortLabel: "Depth change", scaleLabel: "shallower → deeper", domain: "diverging", valueLabel: "Annual mean depth change" },
+  droughtPrevalence: { label: "Share of county-weeks at D1+", shortLabel: "D1+ prevalence", scaleLabel: "lower → higher prevalence", domain: "percent", valueLabel: "Mean D1+ prevalence" },
+  hazardPotential: { label: "Reported natural-disaster events", shortLabel: "Reported events", scaleLabel: "fewer → more events", domain: "count", valueLabel: "Reported events" }
+};
 const POINT_INDEX_CELL_SIZE = 40;
 const POINT_CLUSTER_MIN_ROWS = 80;
 const MAP_VIEW = { width: 1000, height: 600, minZoom: 1, maxZoom: 8 };
@@ -170,10 +180,12 @@ const REAL_DATASETS = {
       color: "#397a82",
       displayMode: "density",
       densityAggregation: "average",
-      densityColorScale: "sequential",
+      densityColorScale: "redGreen",
+      riskMetric: "groundwaterChange",
       measureField: "change_from_2021_ft",
       labelField: "site_id",
       timeField: "year",
+      defaultTimeValue: "2025",
       units: "ft change in depth",
       markerSize: 3,
       opacity: .78,
@@ -190,10 +202,12 @@ const REAL_DATASETS = {
       role: "context",
       color: "#b75f3c",
       geometryType: "states",
+      riskMetric: "droughtPrevalence",
       regionField: "state",
       measureField: "mean_frequency_pct",
       labelField: "state",
       timeField: "year",
+      defaultTimeValue: "2025",
       units: "% of county-weeks",
       opacity: .72,
       detailFields: ["county_count", "counties_ge_25_pct", "p90_frequency_pct", "drought_level", "minimum_weeks"],
@@ -208,10 +222,12 @@ const REAL_DATASETS = {
       role: "constraint",
       color: "#a94c45",
       geometryType: "states",
+      riskMetric: "hazardPotential",
       regionField: "state",
       measureField: "unique_events",
       labelField: "state",
       timeField: "year",
+      defaultTimeValue: "2025",
       units: "reported events",
       opacity: .72,
       detailFields: ["detail_records", "deaths", "injuries", "damage_usd", "event_types"],
@@ -533,6 +549,7 @@ function densityAggregationLabel(layer) {
 }
 
 function densityColorScaleLabel(layer) {
+  if (layer.riskMetric && RISK_METRICS[layer.riskMetric]) return RISK_METRICS[layer.riskMetric].scaleLabel;
   return ({ sequential: "Green → red", spectral: "Blue → red", greenRed: "Green → red · vivid", redGreen: "Red → green", intensity: "Layer color intensity" })[layer.densityColorScale] || "Green → red";
 }
 
@@ -544,7 +561,7 @@ function mixHexColors(start, end, ratio) {
 }
 
 function interpolateDensityColor(ratio, layer) {
-  const palette = layer.densityColorScale === "intensity" ? [.08, .28, .48, .72, 1].map((stop) => mixHexColors("#ffffff", layer.color || "#397a82", stop)) : DENSITY_PALETTES[layer.densityColorScale] || DENSITY_PALETTES.sequential;
+  const palette = layer.riskMetric && RISK_PALETTES[layer.riskMetric] ? RISK_PALETTES[layer.riskMetric] : layer.densityColorScale === "intensity" ? [.08, .28, .48, .72, 1].map((stop) => mixHexColors("#ffffff", layer.color || "#397a82", stop)) : DENSITY_PALETTES[layer.densityColorScale] || DENSITY_PALETTES.sequential;
   const scaled = clamp(Number(ratio) || 0, 0, 1) * (palette.length - 1);
   const lowerIndex = Math.floor(scaled); const upperIndex = Math.min(palette.length - 1, lowerIndex + 1); const blend = scaled - lowerIndex;
   const lower = hexChannels(palette[lowerIndex]); const upper = hexChannels(palette[upperIndex]);
@@ -562,6 +579,40 @@ function formatDensityValue(value) {
   const number = Number(value); if (!Number.isFinite(number)) return "—";
   const absolute = Math.abs(number); const digits = absolute >= 100 ? 0 : absolute >= 10 ? 1 : 2;
   return number.toLocaleString(undefined, { maximumFractionDigits: digits });
+}
+
+function riskMetric(layer) { return layer?.riskMetric && RISK_METRICS[layer.riskMetric] ? RISK_METRICS[layer.riskMetric] : null; }
+
+function riskPalette(layer) { return RISK_PALETTES[layer?.riskMetric] || [mixHexColors("#ffffff", layer?.color || "#397a82", .12), layer?.color || "#397a82"]; }
+
+function interpolatePaletteColor(ratio, palette) {
+  const scaled = clamp(Number(ratio) || 0, 0, 1) * (palette.length - 1);
+  const lowerIndex = Math.floor(scaled); const upperIndex = Math.min(palette.length - 1, lowerIndex + 1); const blend = scaled - lowerIndex;
+  const lower = hexChannels(palette[lowerIndex]); const upper = hexChannels(palette[upperIndex]);
+  return `#${lower.map((channel, index) => Math.round(channel + (upper[index] - channel) * blend).toString(16).padStart(2, "0")).join("")}`;
+}
+
+function measureDomain(layer, values) {
+  const finiteValues = values.map((value) => Number(value)).filter(Number.isFinite);
+  if (!finiteValues.length) return [0, 1];
+  const metric = riskMetric(layer);
+  if (metric?.domain === "diverging") {
+    const scale = Math.max(Math.abs(percentile(finiteValues, .05)), Math.abs(percentile(finiteValues, .95)), .25);
+    return [-scale, scale];
+  }
+  if (metric?.domain === "percent") return [0, 100];
+  if (metric?.domain === "count") return [0, Math.max(1, percentile(finiteValues, .95))];
+  return [percentile(finiteValues, .05), Math.max(percentile(finiteValues, .05), percentile(finiteValues, .95))];
+}
+
+function measureRatio(layer, value, domain = null) {
+  const [minimum, maximum] = domain || measureDomain(layer, layer.data.map((row) => numericValue(row[layer.measureField], Number.NaN)));
+  return maximum > minimum ? clamp((Number(value) - minimum) / (maximum - minimum), 0, 1) : .5;
+}
+
+function formatMeasureValue(layer, value) {
+  const formatted = formatDensityValue(value);
+  return layer?.units ? `${formatted} ${layer.units}` : formatted;
 }
 
 function isNumericField(rows, field) {
@@ -1101,8 +1152,10 @@ function getPointDensityCells(layer) {
   };
   const prepared = [...cells.values()].map((cell) => ({ ...cell, value: getAggregateValue(cell) }));
   const values = prepared.map((cell) => cell.value).filter(Number.isFinite);
-  const scaleMin = aggregation === "count" ? Math.min(...values, 0) : percentile(values, .05);
-  const scaleMax = aggregation === "count" ? Math.max(...values, 1) : Math.max(scaleMin, percentile(values, .95));
+  const scaleValues = layer.riskMetric ? layer.data.map((row) => numericValue(row[layer.measureField], Number.NaN)) : values;
+  const [valueScaleMin, valueScaleMax] = aggregation === "count" ? [Math.min(...values, 0), Math.max(...values, 1)] : measureDomain(layer, scaleValues);
+  const scaleMin = valueScaleMin;
+  const scaleMax = Math.max(scaleMin, valueScaleMax);
   const cellWorldSize = DENSITY_CELL_SIZE / mapZoom;
   return prepared.map((cell) => {
     const ratio = Number.isFinite(cell.value) ? scaleMax > scaleMin ? clamp((cell.value - scaleMin) / (scaleMax - scaleMin), 0, 1) : .5 : 0;
@@ -1166,15 +1219,18 @@ function featureLabel(row, layer, index) {
   return `${layer.geometryType} ${index + 1}`;
 }
 
+function isStateLayer(layer) { return layer?.geometryType === "states" && !isCoverageLayer(layer); }
+
 function layerDisplayKind(layer) {
   if (isPointLayer(layer) && layer.displayMode === "density") return "density";
+  if (isStateLayer(layer)) return "state";
   if (layer.geometryType === "GeometryCollection") return "mixed";
   if (isCoverageLayer(layer)) return ["LineString", "MultiLineString"].includes(layer.geometryType) ? "line" : "area";
   return "point";
 }
 
 function layerDrawPriority(layer) {
-  return ({ density: 0, area: 1, mixed: 2, line: 3, point: 4 })[layerDisplayKind(layer)] ?? 2;
+  return ({ state: 0, density: 1, area: 2, mixed: 3, line: 4, point: 5 })[layerDisplayKind(layer)] ?? 3;
 }
 
 function layerGeometryLabel(layer) {
@@ -1186,6 +1242,7 @@ function mappedRecordCount(layer) {
     if (timeFilterIsActive(layer) && !rowMatchesTemporalFilter(layer, row)) return false;
     return layer.filterMode !== "filter" || rowMatchesFilter(layer, row);
   });
+  if (isStateLayer(layer)) return new Set(rows.map((row) => normalizeState(row[layer.regionField])).filter(Boolean)).size;
   if (isPointLayer(layer)) {
     const indexedRows = new Set((layer._pointIndex || []).map((entry) => entry.row));
     return rows.filter((row) => indexedRows.has(row)).length;
@@ -1195,10 +1252,12 @@ function mappedRecordCount(layer) {
 }
 
 function layerColorDescription(layer) {
+  if (riskMetric(layer)) return riskMetric(layer).label;
   return layer.featureColorField ? `by ${readableFieldName(layer.featureColorField)}` : "single color";
 }
 
 function layerSizeDescription(layer) {
+  if (isStateLayer(layer)) return "value-filled states";
   if (layer.displayMode === "density") return `${densityAggregationLabel(layer)} in each cell`;
   if (layer.displayMode === "bubbles" && layer.measureField) return `scaled by ${readableFieldName(layer.measureField)}`;
   if (isCoverageLayer(layer)) return "not size-encoded";
@@ -1206,6 +1265,7 @@ function layerSizeDescription(layer) {
 }
 
 function layerSurfaceDescription(layer) {
+  if (isStateLayer(layer)) return "filled states";
   if (!isCoverageLayer(layer)) return "point marker";
   return layer.geometryDisplay === "fill" ? "filled area" : "outline only";
 }
@@ -1213,6 +1273,7 @@ function layerSurfaceDescription(layer) {
 function layerEncodingChips(layer) {
   const chips = [layerGeometryLabel(layer)];
   if (layer.displayMode === "density" && isPointLayer(layer)) chips.push(`density · ${densityAggregationLabel(layer)}`);
+  else if (isStateLayer(layer)) chips.push(`fill · ${riskMetric(layer)?.shortLabel || readableFieldName(layer.measureField)}`);
   else if (layer.displayMode === "bubbles" && layer.measureField) chips.push(`size · ${readableFieldName(layer.measureField)}`);
   else if (isCoverageLayer(layer)) chips.push(layer.geometryDisplay === "fill" ? "filled areas" : "outlines");
   else chips.push("uniform dots");
@@ -1224,7 +1285,7 @@ function layerEncodingChips(layer) {
 }
 
 function densityGradient(layer) {
-  const palette = layer.densityColorScale === "intensity" ? [.08, .28, .48, .72, 1].map((stop) => mixHexColors("#ffffff", layer.color || "#397a82", stop)) : DENSITY_PALETTES[layer.densityColorScale] || DENSITY_PALETTES.sequential;
+  const palette = layer.riskMetric && RISK_PALETTES[layer.riskMetric] ? RISK_PALETTES[layer.riskMetric] : layer.densityColorScale === "intensity" ? [.08, .28, .48, .72, 1].map((stop) => mixHexColors("#ffffff", layer.color || "#397a82", stop)) : DENSITY_PALETTES[layer.densityColorScale] || DENSITY_PALETTES.sequential;
   return `linear-gradient(90deg, ${palette.join(", ")})`;
 }
 
@@ -1245,9 +1306,10 @@ function renderMapReadingStrip(layer) {
     els.mapReadingStrip.innerHTML = `<div class="reading-empty"><span class="reading-kicker">HOW TO READ</span><strong>Select a layer to see its visual encodings.</strong><span>Use the layer index below the map for the layers currently in view.</span></div>`;
     return;
   }
-  const mapped = mappedRecordCount(layer); const role = LAYER_ROLES[layer.role]?.label || "Context / reference"; const contrastDescription = mapPresentation === "multiples" ? "one layer per pane" : mapPresentation === "focus" ? "focus in foreground" : mapEmphasis === "selected" ? "selected layer emphasized" : "all layers balanced"; const values = [{ label: "shape", value: layerGeometryLabel(layer) }, { label: "color", value: layerColorDescription(layer) }, isCoverageLayer(layer) ? { label: "surface", value: layerSurfaceDescription(layer) } : { label: "size", value: layerSizeDescription(layer) }, { label: "opacity", value: `${Math.round(Number(layer.opacity || 0) * 100)}%` }, { label: "contrast", value: contrastDescription }];
+  const mapped = mappedRecordCount(layer); const role = LAYER_ROLES[layer.role]?.label || "Context / reference"; const contrastDescription = mapPresentation === "multiples" ? "one layer per pane" : mapPresentation === "focus" ? "focus in foreground" : mapEmphasis === "selected" ? "selected layer emphasized" : "all layers balanced"; const values = [{ label: "shape", value: layerGeometryLabel(layer) }, { label: "color", value: layerColorDescription(layer) }, isCoverageLayer(layer) || isStateLayer(layer) ? { label: "surface", value: layerSurfaceDescription(layer) } : { label: "size", value: layerSizeDescription(layer) }, { label: "opacity", value: `${Math.round(Number(layer.opacity || 0) * 100)}%` }, { label: "contrast", value: contrastDescription }];
   if (layer.timeField && temporalOptions(layer).length) values.push({ label: "time", value: readableFieldName(layer.timeField) });
-  if (layer.displayMode === "density" && layer.renderDensityCells?.length) values.push({ label: "range", value: `${formatDensityValue(layer.renderDensityCells[0].scaleMin)}–${formatDensityValue(layer.renderDensityCells[0].scaleMax)}${layer.units ? ` ${layer.units}` : ""}` });
+  if (layer.displayMode === "density" && layer.renderDensityCells?.length) values.push({ label: "range", value: `${formatMeasureValue(layer, layer.renderDensityCells[0].scaleMin)}–${formatMeasureValue(layer, layer.renderDensityCells[0].scaleMax)}` });
+  if (isStateLayer(layer) && layer.renderStateRows?.length) values.push({ label: "range", value: `${formatMeasureValue(layer, layer.renderStateDomain[0])}–${formatMeasureValue(layer, layer.renderStateDomain[1])}` });
   const readingKicker = mapPresentation === "focus" ? "FOCUS LAYER <em>context stays quiet</em>" : mapPresentation === "multiples" ? "COMPARISON KEY <em>one pane per layer</em>" : "READING KEY <em>overlay mode</em>";
   els.mapReadingStrip.innerHTML = `<div class="reading-primary"><span class="reading-kicker">${readingKicker}</span><div class="reading-title">${layerSymbolMarkup(layer)}<strong>${escapeHTML(layer.name)}</strong><span>${escapeHTML(role)} · ${mapped.toLocaleString()} mapped</span></div></div><div class="reading-encodings">${values.map((item) => `<span class="reading-encoding"><b>${escapeHTML(item.label)}</b>${escapeHTML(item.value)}</span>`).join("")}${layer.clusterMode ? `<span class="reading-encoding reading-encoding-alert"><b>zoom</b>${layer.clusteredRecordCount.toLocaleString()} grouped</span>` : ""}${filterIsActive(layer) ? `<span class="reading-encoding reading-encoding-focus"><b>focus</b>${escapeHTML(activeFilterDescription(layer))}</span>` : ""}</div>`;
 }
@@ -1308,10 +1370,86 @@ function renderAquiferBoundaryVisuals(layer) {
   return { markup, mappedCount: 0, clusteredRecordCount: 0, densityRecordCount: 0, aquiferHitMarkup };
 }
 
+function getStateRenderRows(layer) {
+  const groups = new Map();
+  getRenderableRows(layer).forEach(({ row, index }) => {
+    const state = normalizeState(row[layer.regionField]);
+    if (!state || !US_STATE_PATHS[state]) return;
+    const value = numericValue(row[layer.measureField], Number.NaN);
+    const entries = groups.get(state) || [];
+    entries.push({ row, index, value });
+    groups.set(state, entries);
+  });
+  return [...groups.entries()].map(([state, entries]) => {
+    const validEntries = entries.filter((entry) => Number.isFinite(entry.value));
+    if (!validEntries.length) return null;
+    const sorted = [...validEntries].sort((left, right) => {
+      const leftKey = temporalSortKey(left.row[layer.timeField]); const rightKey = temporalSortKey(right.row[layer.timeField]);
+      return typeof leftKey === "number" && typeof rightKey === "number" ? leftKey - rightKey : String(leftKey).localeCompare(String(rightKey));
+    });
+    const representative = sorted[sorted.length - 1];
+    const value = timeFilterIsActive(layer) ? representative.value : validEntries.reduce((sum, entry) => sum + entry.value, 0) / validEntries.length;
+    const focused = !filterIsActive(layer) || entries.some(({ row }) => rowMatchesFilter(layer, row));
+    return { state, row: representative.row, rowIndex: representative.index, value, min: Math.min(...validEntries.map((entry) => entry.value)), max: Math.max(...validEntries.map((entry) => entry.value)), recordCount: validEntries.length, entries: validEntries, period: timeFilterIsActive(layer) ? temporalLabel(layer.timeFilterValue) : `mean across ${new Set(validEntries.map((entry) => temporalBucket(entry.row[layer.timeField]))).size || 1} years`, focused };
+  }).filter(Boolean).sort((left, right) => left.state.localeCompare(right.state));
+}
+
+function renderStateVisual(layer, summary, index, domain) {
+  const path = US_STATE_PATHS[summary.state];
+  if (!path) return "";
+  const quiet = mapPresentation === "focus" && hasVisibleSelectedLayer() && layer.id !== selectedLayerId;
+  const color = interpolatePaletteColor(measureRatio(layer, summary.value, domain), riskPalette(layer));
+  const layerOpacity = mapLayerOpacity(layer);
+  const focusOpacity = filterIsActive(layer) && layer.filterMode === "highlight" && !summary.focused ? Math.max(.04, layerOpacity * .16) : layerOpacity;
+  const fillOpacity = quiet ? Math.max(.035, focusOpacity * .65) : Math.min(.84, Math.max(.12, focusOpacity * .82));
+  const stroke = quiet ? "#9aaead" : "#fffefa";
+  const value = formatMeasureValue(layer, summary.value);
+  return `<path class="layer-state layer-role-${escapeHTML(layer.role || "context")}${summary.focused ? "" : " layer-state-muted"}" data-layer-id="${layer.id}" data-state-index="${index}" data-map-x="${STATE_POINTS[summary.state]?.[0] || 0}" data-map-y="${STATE_POINTS[summary.state]?.[1] || 0}" fill="${color}" fill-opacity="${fillOpacity}" stroke="${stroke}" stroke-width="${quiet ? ".55" : ".9"}" vector-effect="non-scaling-stroke" d="${path}" opacity="${focusOpacity}"><title>${escapeHTML(STATE_NAMES[summary.state] || summary.state)} · ${escapeHTML(value)}</title></path>`;
+}
+
+function renderStateLayerVisuals(layer) {
+  const summaries = getStateRenderRows(layer);
+  const domain = measureDomain(layer, layer.data.map((row) => numericValue(row[layer.measureField], Number.NaN)));
+  layer.renderStateRows = summaries;
+  layer.renderStateDomain = domain;
+  layer.renderDensityCells = [];
+  layer.renderClusters = [];
+  layer.densityMode = false;
+  layer.clusterMode = false;
+  layer.clusteredRecordCount = 0;
+  return { markup: summaries.map((summary, index) => renderStateVisual(layer, summary, index, domain)).join(""), mappedCount: summaries.length, clusteredRecordCount: 0, densityRecordCount: 0, aquiferHitMarkup: "" };
+}
+
+function stateSummaryNumber(summary, field) {
+  const values = (summary.entries || []).map((entry) => numericValue(entry.row[field], Number.NaN)).filter(Number.isFinite);
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : Number.NaN;
+}
+
+function stateSummaryValue(summary, field) {
+  return summary.period.startsWith("mean across") ? stateSummaryNumber(summary, field) : summary.row[field];
+}
+
+function riskTooltipDetails(layer, summary) {
+  const metric = riskMetric(layer); const row = summary.row; const details = [`Period: ${summary.period}`, `${metric?.valueLabel || readableFieldName(layer.measureField)}: ${formatMeasureValue(layer, summary.value)}`];
+  if (layer.riskMetric === "droughtPrevalence") {
+    details.push(`90th percentile county frequency: ${formatMeasureValue({ units: "%" }, stateSummaryValue(summary, "p90_frequency_pct"))}`);
+    details.push(`Counties at ≥25% frequency: ${formatMeasureValue({ units: "%" }, stateSummaryValue(summary, "counties_ge_25_pct"))}`);
+    details.push(`Threshold: ${stateSummaryValue(summary, "drought_level") || "D1+"} · minimum ${formatMeasureValue({ units: "weeks" }, stateSummaryValue(summary, "minimum_weeks"))}`);
+  } else if (layer.riskMetric === "hazardPotential") {
+    details.push(`Deaths: ${formatDensityValue(stateSummaryValue(summary, "deaths"))} · injuries: ${formatDensityValue(stateSummaryValue(summary, "injuries"))}`);
+    const damage = Number(stateSummaryValue(summary, "damage_usd")); details.push(`Reported damage: ${Number.isFinite(damage) ? `$${damage.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—"}`);
+    const eventTypes = summary.period.startsWith("mean across") ? [...new Set((summary.entries || []).flatMap((entry) => String(entry.row.event_types || "").split(" | ").filter(Boolean)))].slice(0, 5) : String(row.event_types || "").split(" | ").filter(Boolean).slice(0, 5);
+    if (eventTypes.length) details.push(`Event types: ${eventTypes.join(", ")}${eventTypes.length >= 5 ? "…" : ""}`);
+  }
+  return details;
+}
+
 function renderLayerVisuals(layer) {
   let mappedCount = 0; let clusteredRecordCount = 0; let densityRecordCount = 0; let aquiferHitMarkup = ""; let markup = "";
   if (isFoundationLayer(layer)) {
     return renderAquiferBoundaryVisuals(layer);
+  } else if (isStateLayer(layer)) {
+    return renderStateLayerVisuals(layer);
   } else if (isPointLayer(layer) && layer.displayMode === "density") {
     const cells = getPointDensityCells(layer); layer.renderDensityCells = cells; layer.densityMode = cells.length > 0; layer.renderClusters = []; layer.clusterMode = false; layer.clusteredRecordCount = 0; densityRecordCount = cells.reduce((total, cell) => total + cell.count, 0); mappedCount = cells.length; markup = `<g class="density-surface${mapPresentation === "focus" && hasVisibleSelectedLayer() && layer.id !== selectedLayerId ? " density-surface-context" : ""}" clip-path="url(#densityLandClip)" filter="url(#densityBlur)">${cells.map((cell, index) => renderDensityVisual(layer, cell, index)).join("")}</g>`;
   } else if (shouldClusterPoints(layer)) {
@@ -1349,6 +1487,23 @@ function renderMultiples(visible, renderedById) {
   });
 }
 
+function metricDescriptionMarkup(layer) {
+  if (layer.riskMetric === "groundwaterChange") return `<span class="legend-risk-note"><b>Read it:</b> negative = shallower than 2021; positive = deeper.</span>`;
+  if (layer.riskMetric === "droughtPrevalence") return `<span class="legend-risk-note"><b>Read it:</b> share of county-weeks at D1+ (moderate drought or worse).</span>`;
+  if (layer.riskMetric === "hazardPotential") return `<span class="legend-risk-note"><b>Read it:</b> historical NOAA event count, not a probability forecast.</span>`;
+  return "";
+}
+
+function riskScaleMarkup(layer) {
+  const metric = riskMetric(layer);
+  if (!metric && !isStateLayer(layer)) return "";
+  const domain = layer.renderStateDomain || measureDomain(layer, layer.data.map((row) => numericValue(row[layer.measureField], Number.NaN)));
+  const selectedPeriod = timeFilterIsActive(layer) ? temporalLabel(layer.timeFilterValue) : layer.timeField ? "mean across available years" : "all records";
+  const capNote = metric?.domain === "count" ? " · color capped at 95th percentile" : metric?.domain === "diverging" ? " · symmetric around zero" : "";
+  const palette = metric ? riskPalette(layer) : [mixHexColors("#ffffff", layer.color || "#397a82", .12), layer.color || "#397a82"];
+  return `<div class="legend-scale risk-scale"><div class="legend-scale-heading"><span>${escapeHTML(metric?.shortLabel || readableFieldName(layer.measureField))}</span><span>${escapeHTML(metric?.scaleLabel || "lower → higher")}, ${escapeHTML(selectedPeriod)}${escapeHTML(capNote)}</span></div><div class="legend-gradient" style="background:linear-gradient(90deg, ${palette.join(", ")})"></div><div class="legend-scale-values"><span>${escapeHTML(formatMeasureValue(layer, domain[0]))}</span><span>${escapeHTML(formatMeasureValue(layer, domain[1]))}</span></div></div>`;
+}
+
 function renderLegend() {
   const visible = layers.filter((layer) => layer.visible && !isFoundationLayer(layer));
   const groups = ["candidate", "infrastructure", "constraint", "context"];
@@ -1358,10 +1513,11 @@ function renderLegend() {
     const role = LAYER_ROLES[roleKey] || { label: "Layer", color: "#56876a" };
     const rows = groupLayers.map((layer) => {
       const selected = layer.id === selectedLayerId; const mapped = mappedRecordCount(layer); const entries = Object.entries(layer.featureColorMap || {}); const focus = activeFilterDescription(layer); const colorDescription = layer.featureColorField ? `color · ${readableFieldName(layer.featureColorField)}` : "single color";
-      const densityScale = selected && layer.displayMode === "density" && layer.renderDensityCells?.length ? `<div class="legend-scale"><div class="legend-scale-heading"><span>${escapeHTML(densityAggregationLabel(layer))}</span><span>${escapeHTML(densityColorScaleLabel(layer))}</span></div><div class="legend-gradient" style="background:${densityGradient(layer)}"></div><div class="legend-scale-values"><span>${formatDensityValue(layer.renderDensityCells[0].scaleMin)}</span><span>${formatDensityValue(layer.renderDensityCells[0].scaleMax)}${layer.units ? ` ${escapeHTML(layer.units)}` : ""}</span></div></div>` : "";
+      const densityScale = selected && layer.displayMode === "density" && layer.renderDensityCells?.length ? `<div class="legend-scale"><div class="legend-scale-heading"><span>${escapeHTML(densityAggregationLabel(layer))}</span><span>${escapeHTML(densityColorScaleLabel(layer))}</span></div><div class="legend-gradient" style="background:${densityGradient(layer)}"></div><div class="legend-scale-values"><span>${escapeHTML(formatMeasureValue(layer, layer.renderDensityCells[0].scaleMin))}</span><span>${escapeHTML(formatMeasureValue(layer, layer.renderDensityCells[0].scaleMax))}</span></div></div>` : "";
+      const stateScale = selected && isStateLayer(layer) && layer.renderStateRows?.length ? riskScaleMarkup(layer) : "";
       const categoryMarkup = selected && entries.length ? `<div class="legend-categories">${entries.slice(0, 8).map(([value, color]) => `<span class="legend-category" title="${escapeHTML(value)}"><span class="legend-swatch" style="background:${color}"></span>${escapeHTML(value)}</span>`).join("")}</div>${entries.length > 8 ? `<span class="legend-more">+${entries.length - 8} additional categories</span>` : ""}` : "";
       const warning = selected && layer.featureColorWarning ? `<span class="legend-more">${escapeHTML(layer.featureColorWarning)}</span>` : "";
-      const detail = selected ? `<div class="legend-layer-detail"><span>${escapeHTML(layerGeometryLabel(layer))} · ${escapeHTML(isCoverageLayer(layer) ? layerSurfaceDescription(layer) : layerSizeDescription(layer))}</span><span>${escapeHTML(colorDescription)}</span>${layer.clusterMode ? `<span>${layer.clusteredRecordCount.toLocaleString()} grouped at this zoom</span>` : ""}${focus ? `<span>${layer.filterMode === "filter" ? "Showing only" : "Highlighting"} ${escapeHTML(focus)}</span>` : ""}</div>${densityScale}${categoryMarkup}${warning}` : `<span class="legend-layer-compact-meta">${escapeHTML(layerGeometryLabel(layer))} · ${escapeHTML(colorDescription)}</span>`;
+      const detail = selected ? `<div class="legend-layer-detail"><span>${escapeHTML(layerGeometryLabel(layer))} · ${escapeHTML(isCoverageLayer(layer) || isStateLayer(layer) ? layerSurfaceDescription(layer) : layerSizeDescription(layer))}</span><span>${escapeHTML(colorDescription)}</span>${layer.clusterMode ? `<span>${layer.clusteredRecordCount.toLocaleString()} grouped at this zoom</span>` : ""}${focus ? `<span>${layer.filterMode === "filter" ? "Showing only" : "Highlighting"} ${escapeHTML(focus)}</span>` : ""}</div>${densityScale}${stateScale}${metricDescriptionMarkup(layer)}${categoryMarkup}${warning}` : `<span class="legend-layer-compact-meta">${escapeHTML(layerGeometryLabel(layer))} · ${escapeHTML(colorDescription)}</span>`;
       return `<div class="legend-layer ${selected ? "is-current" : ""}" data-layer-id="${layer.id}" role="button" tabindex="0" aria-label="Select ${escapeHTML(layer.name)}"><div class="legend-layer-row">${layerSymbolMarkup(layer, "legend-symbol")}<span class="legend-layer-name"><b>${escapeHTML(layer.name)}</b><small>${mapped.toLocaleString()} / ${layer.data.length.toLocaleString()} mapped</small></span><span class="legend-layer-mode">${selected ? "selected" : ""}</span></div>${detail}</div>`;
     }).join("");
     return `<section class="legend-group"><div class="legend-group-heading"><span><i style="background:${role.color}"></i>${escapeHTML(role.label)}</span><small>${groupLayers.length} layer${groupLayers.length === 1 ? "" : "s"}</small></div><div class="legend-group-list">${rows}</div></section>`;
@@ -1393,12 +1549,12 @@ function renderMap() {
   const densityCellCount = renderedLayers.reduce((total, entry) => total + (entry.layer.displayMode === "density" && isPointLayer(entry.layer) ? entry.layer.renderDensityCells?.length || 0 : 0), 0); const nonDensityMarkCount = Math.max(0, mappedCount - densityCellCount); const visualSummary = densityCellCount ? `${densityCellCount.toLocaleString()} smoothed heat cells${nonDensityMarkCount ? ` · ${nonDensityMarkCount.toLocaleString()} other marks` : ""}` : `${mappedCount.toLocaleString()} visual marks`;
   els.mapRowSummary.textContent = `${visualSummary}${groupingNote}${densityNote}${visible.some((layer) => layer.data.length > MAX_RENDER_POINTS && !isCoverageLayer(layer) && !layer.clusterMode && layer.displayMode !== "density") ? ` · max ${MAX_RENDER_POINTS.toLocaleString()} per point layer` : ""}`;
   const viewNote = mapPresentation === "multiples" ? " · separate comparison panes" : mapPresentation === "focus" ? " · focus + quiet context" : " · overlay"; els.mapStatus.textContent = `${dataVisible.length} active layer${dataVisible.length === 1 ? "" : "s"} · ${visualSummary}${groupingNote}${densityNote}${viewNote}`;
-  const selected = layers.find((layer) => layer.id === selectedLayerId); const displayDescription = selected?.displayMode === "density" ? `${densityAggregationLabel(selected)} heatmap` : selected?.displayMode === "bubbles" ? "bubble size" : "uniform marker"; const densityScale = selected?.displayMode === "density" && selected.densityAggregation !== "count" && selected.renderDensityCells?.length ? ` · scale ${formatDensityValue(selected.renderDensityCells[0].scaleMin)}–${formatDensityValue(selected.renderDensityCells[0].scaleMax)}${selected.units ? ` ${selected.units}` : ""}` : ""; const densityColorNote = selected?.displayMode === "density" ? ` · ${densityColorScaleLabel(selected)}` : ""; const contrastNote = mapPresentation === "multiples" ? " · layer shown in its own pane" : mapPresentation === "focus" ? " · focus layer foreground; context subdued" : mapEmphasis === "selected" && hasVisibleSelectedLayer() ? " · selected layer emphasized" : " · all layers balanced"; els.mapMeasureSummary.textContent = selected ? `${selected.measureField ? readableFieldName(selected.measureField) : "No measure"} · ${displayDescription}${densityScale}${densityColorNote} · ${selected.geometryDisplay || "source geometry"}${activeFilterDescription(selected) ? ` · ${selected.filterMode} focus` : ""}${contrastNote}` : "Select a layer to see its visual encoding";
+  const selected = layers.find((layer) => layer.id === selectedLayerId); const displayDescription = selected?.displayMode === "density" ? `${densityAggregationLabel(selected)} heatmap` : isStateLayer(selected) ? "state fill" : selected?.displayMode === "bubbles" ? "bubble size" : "uniform marker"; const densityScale = selected?.displayMode === "density" && selected.densityAggregation !== "count" && selected.renderDensityCells?.length ? ` · scale ${formatMeasureValue(selected, selected.renderDensityCells[0].scaleMin)}–${formatMeasureValue(selected, selected.renderDensityCells[0].scaleMax)}` : ""; const densityColorNote = selected?.displayMode === "density" || isStateLayer(selected) ? ` · ${densityColorScaleLabel(selected)}` : ""; const contrastNote = mapPresentation === "multiples" ? " · layer shown in its own pane" : mapPresentation === "focus" ? " · focus layer foreground; context subdued" : mapEmphasis === "selected" && hasVisibleSelectedLayer() ? " · selected layer emphasized" : " · all layers balanced"; els.mapMeasureSummary.textContent = selected ? `${selected.riskMetric ? riskMetric(selected).label : selected.measureField ? readableFieldName(selected.measureField) : "No measure"} · ${displayDescription}${densityScale}${densityColorNote} · ${selected.geometryDisplay || "source geometry"}${activeFilterDescription(selected) ? ` · ${selected.filterMode} focus` : ""}${contrastNote}` : "Select a layer to see its visual encoding";
   renderVisualRecipe(selected); renderMapReadingStrip(selected); renderLegend(); bindMapFeatures();
 }
 
 function featureElementFromTarget(target) {
-  const element = target?.closest?.(".layer-point, .layer-feature, .layer-cluster, .layer-density-cell, .aquifer-hit-feature");
+  const element = target?.closest?.(".layer-point, .layer-state, .layer-feature, .layer-cluster, .layer-density-cell, .aquifer-hit-feature");
   return element && els.mapSvg.contains(element) ? element : null;
 }
 
@@ -1415,24 +1571,30 @@ function showMapFeatureTooltip(element) {
     const valueNote = cell.aggregation === "count" ? `Record density: ${formatDensityValue(cell.value)}` : `${densityAggregationLabel(layer)}: ${formatDensityValue(cell.value)}${layer.units ? ` ${layer.units}` : ""}`;
     const scaleNote = cell.aggregation === "count" ? "" : ` · value scale ${formatDensityValue(cell.scaleMin)}–${formatDensityValue(cell.scaleMax)}`;
     const supportNote = cell.count ? `${cell.count.toLocaleString()} source record${cell.count === 1 ? "" : "s"} centered in cell` : "surface blended from nearby observations";
-    els.mapTooltip.innerHTML = `<strong>${escapeHTML(valueNote)}</strong><span>${escapeHTML(layer.name)}</span><span>${supportNote} · ${escapeHTML(densityColorScaleLabel(layer))}${scaleNote}${focusNote}</span>`; els.mapTooltip.hidden = false; els.mapTooltip.dataset.owner = "feature"; positionMapTooltip({ x: cell.x + cell.width / 2, y: cell.y + cell.height / 2 }); return;
+    const interpretation = layer.riskMetric === "groundwaterChange" ? "positive = deeper than 2021 · negative = shallower" : "";
+    els.mapTooltip.innerHTML = `<strong>${escapeHTML(valueNote)}</strong><span>${escapeHTML(layer.name)}</span><span>${supportNote} · ${escapeHTML(densityColorScaleLabel(layer))}${scaleNote}${focusNote}</span>${interpretation ? `<span>${escapeHTML(interpretation)}</span>` : ""}`; els.mapTooltip.hidden = false; els.mapTooltip.dataset.owner = "feature"; positionMapTooltip({ x: cell.x + cell.width / 2, y: cell.y + cell.height / 2 }); return;
   }
   if (element.classList.contains("layer-cluster")) {
     const cluster = layer.renderClusters?.[Number(element.dataset.clusterIndex)]; if (!cluster) return;
     els.mapTooltip.innerHTML = `<strong>${cluster.count.toLocaleString()} records</strong><span>${escapeHTML(layer.name)}</span><span>Zoom in for individual features</span>`; els.mapTooltip.hidden = false; els.mapTooltip.dataset.owner = "feature"; positionMapTooltip({ x: cluster.x, y: cluster.y }); return;
   }
+  if (element.classList.contains("layer-state")) {
+    const summary = layer.renderStateRows?.[Number(element.dataset.stateIndex)]; if (!summary) return;
+    const label = STATE_NAMES[summary.state] || summary.state; const details = riskTooltipDetails(layer, summary);
+    els.mapTooltip.innerHTML = `<strong>${escapeHTML(label)}</strong><span>${escapeHTML(layer.name)}</span>${details.map((detail) => `<span>${escapeHTML(detail)}</span>`).join("")}`; els.mapTooltip.hidden = false; els.mapTooltip.dataset.owner = "feature"; positionMapTooltip({ x: STATE_POINTS[summary.state][0], y: STATE_POINTS[summary.state][1] }); return;
+  }
   const rowIndex = Number(element.dataset.rowIndex); const row = layer.data[rowIndex]; if (!row) return;
   const point = geometryAnchor(row, layer); if (!point) return; const label = row.__geometry ? featureLabel(row, layer, rowIndex) : getPoint(row, layer)?.label || "Mapped feature"; const units = layer.units ? ` ${layer.units}` : ""; const details = [];
   if (isAquiferLikeLayer(layer)) { const aquiferFields = inferAquiferFields(layer.fields); if (aquiferFields.name && row[aquiferFields.name] !== undefined) details.push(`Aquifer name: ${row[aquiferFields.name]}`); if (aquiferFields.type && row[aquiferFields.type] !== undefined) details.push(`Aquifer type: ${row[aquiferFields.type]}`); }
-  if (layer.measureField && row[layer.measureField] !== undefined) { const measureKey = String(layer.measureField).toLowerCase(); const measureLabel = ["qama", "qa_ma"].includes(measureKey) ? "Mean annual flow estimate" : measureKey === "cwp_actual_average_flow_nmbr" ? "Reported average flow" : { frequency_pct: "Historical drought frequency", us_prcnt: "Outlook area share" }[measureKey] || readableFieldName(layer.measureField); details.push(`${measureLabel}: ${row[layer.measureField]}${units}`); }
+  if (layer.measureField && row[layer.measureField] !== undefined) { const measureKey = String(layer.measureField).toLowerCase(); const measureLabel = layer.riskMetric === "groundwaterChange" ? "Change from 2021 baseline" : ["qama", "qa_ma"].includes(measureKey) ? "Mean annual flow estimate" : measureKey === "cwp_actual_average_flow_nmbr" ? "Reported average flow" : { frequency_pct: "Historical drought frequency", us_prcnt: "Outlook area share" }[measureKey] || readableFieldName(layer.measureField); details.push(`${measureLabel}: ${row[layer.measureField]}${units}`); if (layer.riskMetric === "groundwaterChange") details.push("Interpretation: positive = deeper; negative = shallower"); }
   if (!isAquiferLikeLayer(layer) && layer.featureColorField && layer.featureColorField !== layer.labelField && row[layer.featureColorField] !== undefined) { const colorFieldKey = String(layer.featureColorField).toLowerCase(); const colorFieldLabel = { cwp_major_minor_status_flag: "Facility size class" }[colorFieldKey] || readableFieldName(layer.featureColorField); details.push(`${colorFieldLabel}: ${row[layer.featureColorField]}`); }
   if (layer.detailFields?.length) {
-    const detailLabels = { streamorde: "Stream order", totdasqkm: "Cumulative drainage area", vama: "Estimated velocity", gageidma: "USGS gage", gageqma: "Gaged mean annual flow", gageadjma: "Gage adjusted", cwp_city: "City", cwp_state: "State", cwp_county: "County", cwp_permit_status_desc: "Permit status", cwp_status: "Compliance status", cwp_major_minor_status_flag: "Facility size class", cwp_total_design_flow_nmbr: "Design flow", fac_derived_wbd_name: "Watershed", permit_name: "Permit name", permit_components: "Permit components", dfr_url: "EPA detailed report", drought_weeks: "Drought-threshold weeks", observation_weeks: "Observation weeks", drought_level: "Drought threshold", minimum_weeks: "Minimum event length", period_start: "Period start", period_end: "Period end", fips: "County FIPS", fcst_date: "Forecast release", target: "Forecast target month", area: "Outlook area" };
+    const detailLabels = { streamorde: "Stream order", totdasqkm: "Cumulative drainage area", vama: "Estimated velocity", gageidma: "USGS gage", gageqma: "Gaged mean annual flow", gageadjma: "Gage adjusted", cwp_city: "City", cwp_state: "State", cwp_county: "County", cwp_permit_status_desc: "Permit status", cwp_status: "Compliance status", cwp_major_minor_status_flag: "Facility size class", cwp_total_design_flow_nmbr: "Design flow", fac_derived_wbd_name: "Watershed", permit_name: "Permit name", permit_components: "Permit components", dfr_url: "EPA detailed report", drought_weeks: "Drought-threshold weeks", observation_weeks: "Observation weeks", drought_level: "Drought threshold", minimum_weeks: "Minimum event length", period_start: "Period start", period_end: "Period end", fips: "County FIPS", fcst_date: "Forecast release", target: "Forecast target month", area: "Outlook area", groundwater_mean_ft: "Annual mean depth-to-water", change_from_previous_ft: "Change from previous year", observation_count: "Observations", baseline_year: "Baseline year", baseline_date: "Baseline date", latest_date: "Latest date", time_series_id: "USGS time-series ID" };
     layer.detailFields.forEach((field) => {
       const detailKey = String(field || "").toLowerCase();
       if (!field || field === layer.measureField || field === layer.featureColorField || row[field] === undefined || row[field] === null || row[field] === "" || (detailKey === "gageidma" && String(row[field]) === "0")) return;
       const value = detailKey === "gageadjma" ? (Number(row[field]) === 1 ? "yes" : "no") : row[field];
-      const detailUnits = ["totdasqkm", "lengthkm", "area"].includes(detailKey) ? detailKey === "lengthkm" ? " km" : " km²" : ["vama", "va_ma"].includes(detailKey) ? " fps" : detailKey === "gageqma" ? " cfs" : ["cwp_total_design_flow_nmbr"].includes(detailKey) ? " MGD" : ["drought_weeks", "observation_weeks", "minimum_weeks"].includes(detailKey) ? " weeks" : "";
+      const detailUnits = ["totdasqkm", "lengthkm", "area"].includes(detailKey) ? detailKey === "lengthkm" ? " km" : " km²" : ["vama", "va_ma"].includes(detailKey) ? " fps" : detailKey === "gageqma" ? " cfs" : ["cwp_total_design_flow_nmbr"].includes(detailKey) ? " MGD" : ["drought_weeks", "observation_weeks", "minimum_weeks"].includes(detailKey) ? " weeks" : ["groundwater_mean_ft", "change_from_previous_ft"].includes(detailKey) ? " ft" : "";
       const detailLabel = { ...detailLabels, va_ma: "Estimated velocity", lengthkm: "Reach length", resolution: "Source resolution", comid: "NHDPlus COMID" }[detailKey] || readableFieldName(field);
       details.push(`${detailLabel}: ${value}${detailUnits}`);
     });
@@ -1712,7 +1874,7 @@ function showAllLayers() {
   renderLayerList(); renderMap(); showToast(boundaryMode === "states" ? "All data layers shown; state lines remain active." : "All layers shown.");
 }
 
-function addDataLayer(data, name, source, options = {}) { const layer = createLayer(name, data, source); Object.assign(layer, options); refreshLayerCaches(layer); layers.unshift({ ...layer, color: options.color || LAYER_COLORS[layers.length % LAYER_COLORS.length] }); selectedLayerId = layer.id; renderAll(); els.fileStatus.textContent = `${source} · ${data.length.toLocaleString()} rows · ${layer.fields.length} columns`; showToast(options.foundation ? `${layer.name} added as a map foundation.` : `${layer.name} loaded. Define its fields at right.`); return layer; }
+function addDataLayer(data, name, source, options = {}) { const layer = createLayer(name, data, source); Object.assign(layer, options); refreshLayerCaches(layer); if (options.defaultTimeValue && temporalOptions(layer).some((option) => option.value === options.defaultTimeValue)) layer.timeFilterValue = options.defaultTimeValue; layers.unshift({ ...layer, color: options.color || LAYER_COLORS[layers.length % LAYER_COLORS.length] }); selectedLayerId = layer.id; renderAll(); els.fileStatus.textContent = `${source} · ${data.length.toLocaleString()} rows · ${layer.fields.length} columns`; showToast(options.foundation ? `${layer.name} added as a map foundation.` : `${layer.name} loaded. Define its fields at right.`); return layer; }
 function focusDataEntry() { const panel = document.getElementById("dataEntryPanel"); panel.classList.remove("is-collapsed"); document.getElementById("toggleDataEntryButton")?.setAttribute("aria-expanded", "true"); document.getElementById("toggleDataEntryButton").textContent = "Hide"; panel.scrollIntoView({ behavior: "smooth", block: "nearest" }); els.pasteLayerName.focus(); }
 function createPastedLayer() { try { addDataLayer(parseInput(els.pasteInput.value), els.pasteLayerName.value.trim() || "Pasted layer", "pasted data"); els.pasteInput.value = ""; els.pasteLayerName.value = ""; els.pasteError.hidden = true; } catch (error) { els.pasteError.textContent = error.message; els.pasteError.hidden = false; } }
 function loadFile(file) { if (!file) return; const reader = new FileReader(); reader.onload = () => { try { addDataLayer(parseInput(String(reader.result)), file.name.replace(/\.[^.]+$/, ""), file.name); } catch (error) { showToast(error.message || "Could not read that file."); } }; reader.readAsText(file); }
