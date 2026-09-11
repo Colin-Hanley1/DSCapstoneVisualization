@@ -39,8 +39,6 @@ let mapPointer = null;
 let mapDragMoved = false;
 let mapEmphasis = "selected";
 let mapPresentation = "focus";
-let presentationMode = false;
-let presentationSnapshot = null;
 let aquiferHoverFrame;
 let pendingAquiferHover;
 let boundaryMode = "states";
@@ -163,41 +161,61 @@ const REAL_DATASETS = {
       notes: "Compact time-based display sample combining representative 2010 and 2022 groundwater-depth snapshots. Use the Time lens to switch periods; it is for visual exploration only, not trend inference or modeling."
     }
   },
-  gwdHistoryPack: {
-    file: "data/historical/derived/usgs_groundwater_monthly_2021_2025.csv",
-    name: "USGS groundwater · five-year history",
-    source: "USGS Water Data API · monthly 15th-day snapshots · historical risk pack",
+  gwdChange: {
+    file: "data/historical/derived/usgs_groundwater_change_2021_2025.csv",
+    name: "Groundwater change · annual mean",
+    source: "USGS Water Data API · annual well means and change from 2021 baseline",
     options: {
       role: "context",
       color: "#397a82",
       displayMode: "density",
       densityAggregation: "average",
       densityColorScale: "sequential",
-      measureField: "groundwater_level_ft",
+      measureField: "change_from_2021_ft",
       labelField: "site_id",
-      timeField: "observation_date",
-      units: "ft below land surface",
+      timeField: "year",
+      units: "ft change in depth",
       markerSize: 3,
       opacity: .78,
       maxRenderFeatures: 3400,
-      notes: "Five-year historical display pack of nationwide USGS groundwater-level observations sampled on the 15th of each month. This is an uneven monitoring network and a screening layer, not a balanced panel or a site-specific sustainable-yield determination."
+      detailFields: ["groundwater_mean_ft", "change_from_previous_ft", "observation_count", "baseline_year", "baseline_date", "latest_date", "time_series_id"],
+      notes: "Annual means for wells with observations in the 2021–2025 pack. The displayed measure is annual mean depth-to-water minus that well's 2021 mean; positive values indicate a deeper measured water level. The monitoring network is uneven, so inspect coverage before drawing local conclusions."
     }
   },
-  stormSummaryPack: {
-    file: "data/historical/derived/noaa_storm_events_state_year_type_2021_2025.csv",
-    name: "NOAA hazards · five-year state history",
-    source: "NOAA Storm Events Database · state/year/event-type summary · historical risk pack",
+  droughtPrevalence: {
+    file: "data/historical/derived/usdm_drought_prevalence_state_year_2020_2025.csv",
+    name: "Drought prevalence · annual",
+    source: "U.S. Drought Monitor county statistics · annual state aggregation",
     options: {
-      role: "constraint",
-      color: "#c45b28",
+      role: "context",
+      color: "#b75f3c",
       geometryType: "states",
       regionField: "state",
-      measureField: "detail_records",
-      labelField: "event_type",
+      measureField: "mean_frequency_pct",
+      labelField: "state",
       timeField: "year",
-      units: "reported records",
+      units: "% of county-weeks",
       opacity: .72,
-      notes: "State-level summary of NOAA Storm Events detail records from 2021 through 2025. Detail records can exceed unique physical events; use this as a hazard-pressure screen and pair it with FEMA NRI and local hazard engineering."
+      detailFields: ["county_count", "counties_ge_25_pct", "p90_frequency_pct", "drought_level", "minimum_weeks"],
+      notes: "Annual state means of county-level U.S. Drought Monitor D1+ prevalence, using a four-week minimum event rule. Values are a spatial average of county frequencies, not area-weighted land coverage or a water-supply forecast."
+    }
+  },
+  hazardPotential: {
+    file: "data/historical/derived/noaa_hazard_state_year_2021_2025.csv",
+    name: "Natural-disaster history · annual",
+    source: "NOAA Storm Events Database · state/year hazard aggregation",
+    options: {
+      role: "constraint",
+      color: "#a94c45",
+      geometryType: "states",
+      regionField: "state",
+      measureField: "unique_events",
+      labelField: "state",
+      timeField: "year",
+      units: "reported events",
+      opacity: .72,
+      detailFields: ["detail_records", "deaths", "injuries", "damage_usd", "event_types"],
+      notes: "Annual state aggregation of NOAA Storm Events records from 2021 through 2025. This is historical hazard prevalence, not a probabilistic forecast; pair it with FEMA National Risk Index and local hazard studies for forward-looking potential."
     }
   },
   usgsCurrent: {
@@ -1223,15 +1241,6 @@ function renderVisualRecipe(layer) {
 
 function renderMapReadingStrip(layer) {
   if (!els.mapReadingStrip) return;
-  if (presentationMode) {
-    const active = layers.filter((entry) => entry.visible && !isFoundationLayer(entry));
-    const roleSummary = Object.entries(LAYER_ROLES).map(([role, definition]) => {
-      const count = active.filter((entry) => entry.role === role).length;
-      return count ? `<span class="reading-encoding presentation-role-chip"><b style="color:${definition.color}">${escapeHTML(definition.label)}</b>${count} layer${count === 1 ? "" : "s"}</span>` : "";
-    }).join("");
-    els.mapReadingStrip.innerHTML = `<div class="reading-primary"><span class="reading-kicker">PRESENTATION <em>all visible layers</em></span><div class="reading-title"><strong>${active.length} overlaid layer${active.length === 1 ? "" : "s"}</strong><span>Balanced contrast · hover for details</span></div></div><div class="reading-encodings">${roleSummary}<span class="reading-encoding presentation-note"><b>Map key</b>Layer colors, fills, lines, dots, and density remain distinct</span></div>`;
-    return;
-  }
   if (!layer) {
     els.mapReadingStrip.innerHTML = `<div class="reading-empty"><span class="reading-kicker">HOW TO READ</span><strong>Select a layer to see its visual encodings.</strong><span>Use the layer index below the map for the layers currently in view.</span></div>`;
     return;
@@ -1675,81 +1684,6 @@ function renderPreview() {
 
 function renderAll() { const selected = layers.find((layer) => layer.id === selectedLayerId); renderLayerList(); renderProperties(); renderPreview(); renderTemporalControls(selected); renderMap(); }
 
-let riskBriefData = { annual: [], monthly: [], droughtAverage: 0, droughtHighShare: 0, groundwaterObservations: 0, status: "loading" };
-
-function briefCompactNumber(value) {
-  const number = Number(value) || 0;
-  if (Math.abs(number) >= 1e6) return `${(number / 1e6).toFixed(number >= 1e7 ? 0 : 1)}M`;
-  if (Math.abs(number) >= 1e3) return `${(number / 1e3).toFixed(number >= 1e5 ? 0 : 1)}K`;
-  return Math.round(number).toLocaleString();
-}
-
-function briefUsd(value) {
-  const number = Number(value) || 0;
-  if (number >= 1e9) return `$${(number / 1e9).toFixed(number >= 1e10 ? 0 : 1)}B`;
-  if (number >= 1e6) return `$${(number / 1e6).toFixed(0)}M`;
-  return `$${Math.round(number / 1e3)}K`;
-}
-
-function briefNumeric(value) {
-  const number = Number(String(value ?? "").replace(/[$,%\s,]/g, ""));
-  return Number.isFinite(number) ? number : 0;
-}
-
-function renderRiskEventChart(annual) {
-  const svg = document.getElementById("briefHazardChart");
-  if (!svg || !annual.length) return;
-  const width = 760; const height = 250; const margin = { top: 26, right: 52, bottom: 42, left: 48 }; const innerWidth = width - margin.left - margin.right; const innerHeight = height - margin.top - margin.bottom;
-  const maxEvents = Math.max(...annual.map((row) => row.records), 1); const maxDamage = Math.max(...annual.map((row) => row.damage), 1); const barWidth = Math.min(72, innerWidth / annual.length * .56); const x = (index) => margin.left + (index + .5) * (innerWidth / annual.length); const yEvents = (value) => margin.top + innerHeight - (value / maxEvents) * innerHeight; const yDamage = (value) => margin.top + innerHeight - (value / maxDamage) * innerHeight;
-  const grid = [0, .5, 1].map((ratio) => { const y = margin.top + innerHeight - ratio * innerHeight; return `<line class="brief-chart-grid" x1="${margin.left}" x2="${width - margin.right}" y1="${y}" y2="${y}"></line><text class="brief-chart-axis" x="${margin.left - 10}" y="${y + 4}" text-anchor="end">${briefCompactNumber(maxEvents * ratio)}</text>`; }).join("");
-  const bars = annual.map((row, index) => { const barHeight = innerHeight - (yEvents(row.records) - margin.top); const barX = x(index) - barWidth / 2; return `<rect class="brief-event-bar" x="${barX}" y="${yEvents(row.records)}" width="${barWidth}" height="${barHeight}" rx="2"><title>${row.year}: ${row.records.toLocaleString()} reported records</title></rect><text class="brief-chart-value" x="${x(index)}" y="${Math.max(16, yEvents(row.records) - 8)}" text-anchor="middle">${briefCompactNumber(row.records)}</text><text class="brief-chart-axis brief-chart-year" x="${x(index)}" y="${height - 16}" text-anchor="middle">${row.year}</text>`; }).join("");
-  const damagePath = annual.map((row, index) => `${index ? "L" : "M"} ${x(index)} ${yDamage(row.damage)}`).join(" "); const damageDots = annual.map((row, index) => `<circle class="brief-damage-dot" cx="${x(index)}" cy="${yDamage(row.damage)}" r="4"><title>${row.year}: ${briefUsd(row.damage)} reported property and crop damage</title></circle>`).join("");
-  svg.innerHTML = `<defs><linearGradient id="briefBarGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5a06f"></stop><stop offset="1" stop-color="#c45b28"></stop></linearGradient></defs><text class="brief-chart-axis-title" x="${margin.left}" y="14">REPORTED RECORDS</text><text class="brief-chart-axis-title brief-chart-axis-right" x="${width - margin.right}" y="14" text-anchor="end">DAMAGE · NOMINAL USD</text>${grid}<line class="brief-chart-baseline" x1="${margin.left}" x2="${width - margin.right}" y1="${margin.top + innerHeight}" y2="${margin.top + innerHeight}"></line>${bars}<path class="brief-damage-line" d="${damagePath}"></path>${damageDots}<text class="brief-chart-axis brief-chart-right-label" x="${width - margin.right + 10}" y="${margin.top + 4}">${briefUsd(maxDamage)}</text><text class="brief-chart-axis brief-chart-right-label" x="${width - margin.right + 10}" y="${margin.top + innerHeight + 4}">$0</text>`;
-}
-
-function renderRiskGroundwaterChart(monthly) {
-  const svg = document.getElementById("briefGroundwaterChart");
-  if (!svg || !monthly.length) return;
-  const width = 520; const height = 130; const margin = { top: 12, right: 10, bottom: 28, left: 10 }; const innerWidth = width - margin.left - margin.right; const innerHeight = height - margin.top - margin.bottom; const maxRows = Math.max(...monthly.map((row) => Number(row.rows) || 0), 1); const barWidth = Math.max(3.2, innerWidth / monthly.length - 1.1); const x = (index) => margin.left + index * (innerWidth / monthly.length); const y = (value) => margin.top + innerHeight - (value / maxRows) * innerHeight; const bars = monthly.map((row, index) => { const count = Number(row.rows) || 0; const month = row.month || ""; const year = month.slice(0, 4); const color = year === "2021" ? "#8bbcb0" : year === "2022" ? "#73a99f" : year === "2023" ? "#5e968f" : year === "2024" ? "#4f8582" : "#3d7275"; return `<rect class="brief-groundwater-bar" x="${x(index)}" y="${y(count)}" width="${barWidth}" height="${margin.top + innerHeight - y(count)}" rx="1" fill="${color}"><title>${month}: ${count.toLocaleString()} observations</title></rect>`; }).join(""); const yearLabels = [...new Set(monthly.map((row) => String(row.month || "").slice(0, 4)))].map((year) => { const index = monthly.findIndex((row) => String(row.month || "").startsWith(year)); return `<text class="brief-chart-axis brief-water-year" x="${x(index)}" y="${height - 7}">${year}</text>`; }).join("");
-  svg.innerHTML = `<line class="brief-chart-grid" x1="${margin.left}" x2="${width - margin.right}" y1="${y(maxRows)}" y2="${y(maxRows)}"></line><line class="brief-chart-baseline" x1="${margin.left}" x2="${width - margin.right}" y1="${margin.top + innerHeight}" y2="${margin.top + innerHeight}"></line>${bars}${yearLabels}<text class="brief-chart-axis-title" x="${margin.left}" y="10">MONTHLY OBSERVATIONS · SAMPLE DAY 15</text>`;
-}
-
-function renderRiskBrief() {
-  const status = document.getElementById("briefDataStatus");
-  if (riskBriefData.status === "ready") {
-    const totalEvents = riskBriefData.annual.reduce((sum, row) => sum + row.records, 0); const peak = [...riskBriefData.annual].sort((left, right) => right.records - left.records)[0]; const monthlyCounts = riskBriefData.monthly.map((row) => Number(row.rows) || 0); const minMonthly = Math.min(...monthlyCounts); const maxMonthly = Math.max(...monthlyCounts); const droughtPct = riskBriefData.droughtAverage;
-    if (status) status.textContent = `BUNDLE READY · ${riskBriefData.annual[0]?.year || "2021"}—${riskBriefData.annual.at(-1)?.year || "2025"}`;
-    const hazardPeriod = document.getElementById("briefHazardPeriod"); if (hazardPeriod) hazardPeriod.textContent = `${riskBriefData.annual[0]?.year || "2021"}—${riskBriefData.annual.at(-1)?.year || "2025"}`;
-    const hazardFoot = document.getElementById("briefHazardFoot"); if (hazardFoot) hazardFoot.textContent = `Peak reporting year: ${peak?.year || "—"} · ${briefCompactNumber(peak?.records || 0)} records · ${briefUsd(peak?.damage || 0)} reported damage`;
-    const groundwaterCount = document.getElementById("briefGroundwaterCount"); if (groundwaterCount) groundwaterCount.textContent = briefCompactNumber(riskBriefData.groundwaterObservations);
-    const groundwaterFoot = document.getElementById("briefGroundwaterFoot"); if (groundwaterFoot) groundwaterFoot.textContent = `${riskBriefData.monthly.length} monthly snapshots · ${minMonthly.toLocaleString()}–${maxMonthly.toLocaleString()} readings / snapshot`;
-    const disruption = document.getElementById("briefDisruptionValue"); if (disruption) disruption.textContent = `${briefCompactNumber(totalEvents)} RECORDS`;
-    const volatility = document.getElementById("briefVolatilityValue"); if (volatility) volatility.textContent = `${riskBriefData.monthly.length} SNAPSHOTS`;
-    const drought = document.getElementById("briefDroughtValue"); if (drought) drought.textContent = `${droughtPct.toFixed(1)}% AVG`;
-    const detail = document.getElementById("briefThesisDetail"); if (detail) detail.textContent = `${briefCompactNumber(totalEvents)} NOAA hazard records sit beside ${briefCompactNumber(riskBriefData.groundwaterObservations)} USGS well observations and a county drought-frequency signal. The visual keeps them separate so a site can be interrogated before it is scored.`;
-    renderRiskEventChart(riskBriefData.annual); renderRiskGroundwaterChart(riskBriefData.monthly);
-  } else if (status) {
-    status.textContent = "HISTORICAL EVIDENCE · UNAVAILABLE";
-  }
-}
-
-async function loadRiskBriefData() {
-  try {
-    const responses = await Promise.all([
-      fetch("data/historical/derived/noaa_storm_events_state_year_type_2021_2025.csv", { cache: "no-store" }),
-      fetch("data/historical/collection-manifest.json", { cache: "no-store" }),
-      fetch("data/raw/usdm_county_drought_frequency_2020_2025.csv", { cache: "no-store" })
-    ]);
-    const failed = responses.find((response) => !response.ok); if (failed) throw new Error(`Risk brief data unavailable (${failed.status}).`);
-    const [stormText, manifest, droughtText] = await Promise.all([responses[0].text(), responses[1].json(), responses[2].text()]); const stormRows = parseInput(stormText); const droughtRows = parseInput(droughtText); const annualMap = new Map();
-    stormRows.forEach((row) => { const year = String(row.year); if (!annualMap.has(year)) annualMap.set(year, { year, records: 0, damage: 0, types: new Set() }); const target = annualMap.get(year); target.records += briefNumeric(row.detail_records); target.damage += briefNumeric(row.property_damage_usd) + briefNumeric(row.crop_damage_usd); target.types.add(row.event_type); });
-    const groundwaterSource = manifest.sources?.find((source) => source.name?.toLowerCase().includes("groundwater")); const monthly = groundwaterSource?.raw_files || []; const droughtValues = droughtRows.map((row) => briefNumeric(row.frequency_pct)).filter((value) => Number.isFinite(value)); riskBriefData = { annual: [...annualMap.values()].sort((left, right) => Number(left.year) - Number(right.year)), monthly, groundwaterObservations: Number(groundwaterSource?.rows?.observations) || monthly.reduce((sum, row) => sum + (Number(row.rows) || 0), 0), droughtAverage: droughtValues.length ? droughtValues.reduce((sum, value) => sum + value, 0) / droughtValues.length : 0, droughtHighShare: droughtValues.length ? droughtValues.filter((value) >= 25).length / droughtValues.length : 0, status: "ready" };
-    renderRiskBrief();
-  } catch (error) {
-    riskBriefData.status = "error"; const detail = document.getElementById("briefThesisDetail"); if (detail) detail.textContent = "The presentation bundle could not be read in this session. Open the evidence map below to inspect the existing layers or refresh the deployment."; renderRiskBrief();
-  }
-}
-
 function updateFilterSummaries(layer) {
   if (!layer) return;
   if (!els.stateFilterPanel.hidden) {
@@ -1778,32 +1712,6 @@ function showAllLayers() {
   renderLayerList(); renderMap(); showToast(boundaryMode === "states" ? "All data layers shown; state lines remain active." : "All layers shown.");
 }
 
-function setPresentationMode(enabled) {
-  const nextMode = Boolean(enabled);
-  if (nextMode === presentationMode) return;
-  if (nextMode) {
-    presentationSnapshot = { visibility: new Map(layers.map((layer) => [layer.id, layer.visible])), mapPresentation, mapEmphasis };
-    layers.forEach((layer) => { layer.visible = !(layer.id === aquiferLayerId && boundaryMode === "states"); });
-    mapPresentation = "overlay";
-    mapEmphasis = "balanced";
-  } else if (presentationSnapshot) {
-    layers.forEach((layer) => { if (presentationSnapshot.visibility.has(layer.id)) layer.visible = presentationSnapshot.visibility.get(layer.id); });
-    mapPresentation = presentationSnapshot.mapPresentation;
-    mapEmphasis = presentationSnapshot.mapEmphasis;
-    presentationSnapshot = null;
-  }
-  presentationMode = nextMode;
-  document.body.classList.toggle("presentation-mode", presentationMode);
-  const presentationButton = document.getElementById("presentationButton");
-  if (presentationButton) {
-    presentationButton.textContent = presentationMode ? "Exit presentation" : "Presentation view";
-    presentationButton.setAttribute("aria-pressed", String(presentationMode));
-  }
-  renderAll();
-  showToast(presentationMode ? "Presentation view · all loaded layers overlaid." : "Returned to editing view.");
-  if (presentationMode) window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
 function addDataLayer(data, name, source, options = {}) { const layer = createLayer(name, data, source); Object.assign(layer, options); refreshLayerCaches(layer); layers.unshift({ ...layer, color: options.color || LAYER_COLORS[layers.length % LAYER_COLORS.length] }); selectedLayerId = layer.id; renderAll(); els.fileStatus.textContent = `${source} · ${data.length.toLocaleString()} rows · ${layer.fields.length} columns`; showToast(options.foundation ? `${layer.name} added as a map foundation.` : `${layer.name} loaded. Define its fields at right.`); return layer; }
 function focusDataEntry() { const panel = document.getElementById("dataEntryPanel"); panel.classList.remove("is-collapsed"); document.getElementById("toggleDataEntryButton")?.setAttribute("aria-expanded", "true"); document.getElementById("toggleDataEntryButton").textContent = "Hide"; panel.scrollIntoView({ behavior: "smooth", block: "nearest" }); els.pasteLayerName.focus(); }
 function createPastedLayer() { try { addDataLayer(parseInput(els.pasteInput.value), els.pasteLayerName.value.trim() || "Pasted layer", "pasted data"); els.pasteInput.value = ""; els.pasteLayerName.value = ""; els.pasteError.hidden = true; } catch (error) { els.pasteError.textContent = error.message; els.pasteError.hidden = false; } }
@@ -1811,11 +1719,18 @@ function loadFile(file) { if (!file) return; const reader = new FileReader(); re
 async function loadBundledSample() { try { const response = await fetch("sample.csv", { cache: "no-store" }); if (!response.ok) throw new Error(`sample.csv could not be loaded (${response.status}).`); addDataLayer(parseInput(await response.text()), "sample.csv · groundwater depth", "bundled sample.csv"); } catch (error) { showToast(error.message || "Could not load sample.csv."); } }
 async function loadRealDataset(key) { const dataset = REAL_DATASETS[key]; if (!dataset) return null; try { const response = await fetch(dataset.file, { cache: "no-store" }); if (!response.ok) throw new Error(`${dataset.file} could not be loaded (${response.status}).`); return addDataLayer(parseInput(await response.text()), dataset.name, dataset.source, dataset.options); } catch (error) { showToast(error.message || `Could not load ${dataset.name}.`); return null; } }
 
-async function loadRiskEvidenceLayers() {
-  const existingGroundwater = layers.find((layer) => layer.source?.includes("monthly 15th-day snapshots")); const existingHazards = layers.find((layer) => layer.source?.includes("state/year/event-type summary"));
-  const groundwater = existingGroundwater || await loadRealDataset("gwdHistoryPack"); const hazards = existingHazards || await loadRealDataset("stormSummaryPack");
-  if (!groundwater && !hazards) return;
-  layers.forEach((layer) => { layer.visible = true; }); mapPresentation = "overlay"; mapEmphasis = "balanced"; selectedLayerId = hazards?.id || groundwater?.id || selectedLayerId; renderAll(); document.querySelector(".map-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }); showToast("Evidence map loaded · water and hazard history overlaid.");
+async function loadRiskLayers() {
+  const riskKeys = ["gwdChange", "droughtPrevalence", "hazardPotential"];
+  for (const key of riskKeys) {
+    const dataset = REAL_DATASETS[key];
+    if (!dataset || layers.some((layer) => layer.source === dataset.source)) continue;
+    await loadRealDataset(key);
+  }
+  mapPresentation = "multiples";
+  mapEmphasis = "balanced";
+  renderAll();
+  document.querySelector(".map-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  showToast("Risk layers loaded · use the Time lens to compare years.");
 }
 async function fetchWithTimeout(url, options = {}, timeout = 15000) {
   const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeout);
@@ -1989,10 +1904,7 @@ async function seedDemoLayers() {
 
 document.getElementById("newLayerButton").addEventListener("click", focusDataEntry); document.getElementById("addLayerButton").addEventListener("click", focusDataEntry); document.getElementById("focusLayerButton").addEventListener("click", focusSelectedLayer); document.getElementById("showAllLayersButton").addEventListener("click", showAllLayers); document.getElementById("pasteDataButton").addEventListener("click", focusDataEntry); document.getElementById("openFileButton").addEventListener("click", () => document.getElementById("fileInput").click()); document.getElementById("fileInput").addEventListener("change", (event) => loadFile(event.target.files[0])); document.getElementById("loadSampleFileButton").addEventListener("click", loadBundledSample); document.getElementById("createPastedLayerButton").addEventListener("click", createPastedLayer); document.getElementById("loadExampleButton").addEventListener("click", () => { els.pasteLayerName.value = "sample point observations"; els.pasteInput.value = "lat,long,gwd,year\n30.416,-87.853,35.0,2002\n30.452,-87.742,13.66,2009"; }); document.getElementById("applyPropertiesButton").addEventListener("click", applyProperties); els.geometryTypeField.addEventListener("change", toggleGeometryFields); els.displayModeField.addEventListener("change", toggleGeometryFields); els.opacityField.addEventListener("input", () => { els.opacityOutput.value = `${els.opacityField.value}%`; }); els.markerSizeField.addEventListener("input", () => { els.markerSizeOutput.value = `${els.markerSizeField.value}px`; }); els.lineWidthField.addEventListener("input", () => { els.lineWidthOutput.value = `${els.lineWidthField.value}px`; }); document.getElementById("clearLayersButton").addEventListener("click", () => { layers = []; selectedLayerId = null; aquiferLayerId = null; boundaryMode = "states"; els.boundaryModeSelect.value = "states"; els.statePaths.style.display = ""; renderAll(); els.fileStatus.textContent = "Workspace cleared · add a layer to begin"; }); document.getElementById("exportButton").addEventListener("click", exportSVG); document.getElementById("baseMapSelect").addEventListener("change", (event) => { els.mapGridRect.style.display = event.target.value === "grid" ? "block" : "none"; renderMap(); }); document.getElementById("labelModeSelect").addEventListener("change", (event) => { els.mapLabels.style.display = event.target.value === "state" ? "block" : "none"; renderMap(); }); document.getElementById("mapPresentationSelect").addEventListener("change", (event) => { mapPresentation = event.target.value; renderMap(); }); document.getElementById("layerEmphasisSelect").addEventListener("change", (event) => { mapEmphasis = event.target.value; renderMap(); }); document.getElementById("zoomInButton").addEventListener("click", () => setMapZoom(mapZoom * 1.35)); document.getElementById("zoomOutButton").addEventListener("click", () => setMapZoom(mapZoom / 1.35)); document.getElementById("resetZoomButton").addEventListener("click", resetMapView); document.getElementById("zoomToDataButton").addEventListener("click", zoomToSelectedLayer); document.getElementById("fitMapButton").addEventListener("click", () => { resetMapView(); document.getElementById("mapStage").animate([{ opacity: .72 }, { opacity: 1 }], { duration: 250 }); showToast("Map view reset."); });
 
-document.getElementById("presentationButton").addEventListener("click", () => setPresentationMode(!presentationMode));
-document.getElementById("exitPresentationButton").addEventListener("click", () => setPresentationMode(false));
-document.getElementById("briefExploreButton").addEventListener("click", loadRiskEvidenceLayers);
-document.addEventListener("keydown", (event) => { if (event.key === "Escape" && presentationMode) setPresentationMode(false); });
+document.getElementById("loadRiskLayersButton").addEventListener("click", loadRiskLayers);
 
 document.getElementById("toggleDataEntryButton").addEventListener("click", () => {
   const panel = document.getElementById("dataEntryPanel");
@@ -2037,4 +1949,4 @@ els.temporalSlider.addEventListener("input", (event) => {
 els.temporalPlayButton.addEventListener("click", toggleTemporalPlayback);
 document.getElementById("clearTemporalButton").addEventListener("click", () => setTemporalFilter(""));
 
-bindMapNavigation(); applyMapTransform(); renderBaseMap(); renderStateLabels(); void loadRiskBriefData(); void seedDemoLayers();
+bindMapNavigation(); applyMapTransform(); renderBaseMap(); renderStateLabels(); void seedDemoLayers();

@@ -45,6 +45,13 @@ rerun the NWAA command; the current partial status is recorded in
 - `derived/usgs_groundwater_monthly_YYYY_YYYY.csv`: normalized groundwater
   observations with coordinates, aquifer/HUC metadata when supplied, and data
   quality fields.
+- `derived/usgs_groundwater_change_2021_2025.csv`: annual well means and
+  within-well change from the 2021 mean, for the map Time lens.
+- `derived/usdm_drought_prevalence_state_year_2020_2025.csv`: annual state
+  averages of county D1+ prevalence, including the share of counties above a
+  25% frequency threshold.
+- `derived/noaa_hazard_state_year_2021_2025.csv`: annual state aggregation of
+  unique events, detail records, casualties, reported damage, and event types.
 - `collection-manifest.json` and `nwaa-manifest.json`: coverage, URLs, row
   counts, and limitations.
 
