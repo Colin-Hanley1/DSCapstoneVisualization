@@ -1,0 +1,48 @@
+{
+  "source": "https://water.usgs.gov/nwaa-data/web-services/",
+  "requested_coverage": {
+    "start_water_year": 2016,
+    "end_water_year": 2020
+  },
+  "current_collection_status": "partial_due_to_public_service_rate_limit",
+  "complete_years_in_pack": [
+    2016,
+    2017,
+    2020
+  ],
+  "partial_years_in_pack": {
+    "2018": [
+      "water_quantity",
+      "water_use"
+    ]
+  },
+  "remaining_to_retry": [
+    2018,
+    2019
+  ],
+  "available_files": [
+    "data/raw/nwaa_water_quantity_2016.csv",
+    "data/raw/nwaa_water_use_2016.csv",
+    "data/raw/nwaa_public_supply_2016.csv",
+    "data/raw/nwaa_thermoelectric_2016.csv",
+    "data/raw/nwaa_availability_2016.csv",
+    "data/raw/nwaa_water_quantity_2017.csv",
+    "data/raw/nwaa_water_use_2017.csv",
+    "data/raw/nwaa_public_supply_2017.csv",
+    "data/raw/nwaa_thermoelectric_2017.csv",
+    "data/raw/nwaa_availability_2017.csv",
+    "data/raw/nwaa_water_quantity_2018.csv",
+    "data/raw/nwaa_water_use_2018.csv",
+    "data/raw/nwaa_water_quantity_2020.csv",
+    "data/raw/nwaa_water_use_2020.csv",
+    "data/raw/nwaa_public_supply_2020.csv",
+    "data/raw/nwaa_thermoelectric_2020.csv",
+    "data/raw/nwaa_availability_2020.csv"
+  ],
+  "interpretation": [
+    "NWAA values are modeled estimates keyed to HUC12 watersheds, not measurements at a proposed parcel.",
+    "The archive is useful for basin-scale quantity, withdrawal, consumptive-use, and availability comparisons; join to WBD HUC12 geometry for mapping.",
+    "The 2018 and 2019 gaps are explicit; do not interpolate them without documenting the method."
+  ],
+  "resume_command": "node scripts/collect_nwaa_history.mjs --start-year 2018 --end-year 2019"
+}

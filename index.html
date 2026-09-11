@@ -3,21 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#234b70" />
-    <meta name="description" content="Atlas is a local-first US geospatial data viewer for CSV, JSON, and GeoJSON layers." />
-    <title>Atlas — US geospatial data viewer</title>
+    <meta name="theme-color" content="#173a4b" />
+    <meta name="description" content="Atlas is a data center site-resilience observatory for water, drought, hazard, and infrastructure evidence." />
+    <title>Atlas — site resilience observatory</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="app-header">
       <div class="brand-block">
         <div class="brand-mark">A</div>
-        <div><strong>ATLAS</strong><span>US GEOSPATIAL DATA VIEWER</span></div>
+        <div><strong>ATLAS</strong><span>DATA CENTER SITE RISK OBSERVATORY</span></div>
       </div>
-      <div class="header-meta"><span class="connection-dot"></span> LOCAL / NO UPLOADS <span class="header-divider"></span> GITHUB PAGES READY</div>
+      <div class="header-actions"><div class="header-meta"><span class="connection-dot"></span> EVIDENCE BUNDLE <span class="header-divider"></span> LOCAL / NO UPLOADS</div><button class="presentation-button" id="presentationButton" type="button" aria-pressed="false">Presentation view</button></div>
     </header>
 
     <nav class="toolbar" aria-label="Application toolbar">
@@ -31,9 +31,49 @@
     </nav>
 
     <main class="app-shell">
+      <section class="risk-brief" id="riskBrief" aria-labelledby="riskBriefTitle">
+        <div class="brief-topline"><span>ATLAS / SITE RESILIENCE BRIEF</span><span id="briefDataStatus">HISTORICAL EVIDENCE · LOADING</span></div>
+        <div class="brief-hero">
+          <div class="brief-hero-copy">
+            <span class="brief-kicker">A decision surface for the first pour</span>
+            <h1 id="riskBriefTitle">Where water risk meets the grid.</h1>
+            <p>Screen the places where cooling demand, drought memory, and physical disruption can collide—before a site becomes expensive to move.</p>
+            <div class="brief-hero-tags"><span>BASELINE</span><span>VARIABILITY</span><span>DISRUPTION</span></div>
+          </div>
+          <div class="brief-orbit" aria-hidden="true"><div class="orbit-ring orbit-ring-one"></div><div class="orbit-ring orbit-ring-two"></div><div class="orbit-ring orbit-ring-three"></div><span class="orbit-core">05<br /><small>YR WINDOW</small></span><span class="orbit-tick orbit-tick-a"></span><span class="orbit-tick orbit-tick-b"></span></div>
+        </div>
+        <div class="brief-thesis">
+          <div><span class="brief-band-kicker">SCREENING THESIS</span><strong id="briefThesis">Water is not a single number.</strong><p id="briefThesisDetail">A resilient location has margin: a dependable baseline, tolerable fluctuation, and a recovery path when the exceptional becomes real.</p></div>
+          <button class="brief-action" id="briefExploreButton" type="button">Open evidence map <span>↗</span></button>
+        </div>
+        <div class="brief-grid">
+          <article class="brief-panel brief-trend-panel">
+            <div class="brief-panel-head"><div><span class="brief-panel-kicker">DISRUPTION / 01</span><h2>Hazard pressure is episodic, not abstract.</h2></div><span class="brief-panel-meta" id="briefHazardPeriod">2021—2025</span></div>
+            <div class="brief-chart-shell"><svg id="briefHazardChart" viewBox="0 0 760 250" role="img" aria-labelledby="briefHazardChartTitle briefHazardChartDesc"><title id="briefHazardChartTitle">NOAA storm event records by year</title><desc id="briefHazardChartDesc">Reported NOAA Storm Events detail records from 2021 to 2025.</desc></svg></div>
+            <div class="brief-panel-foot"><span id="briefHazardFoot">Loading NOAA event history…</span><span class="brief-key"><i class="key-bar"></i> reported event records <i class="key-line"></i> reported damage</span></div>
+          </article>
+          <article class="brief-panel brief-water-panel">
+            <div class="brief-panel-head"><div><span class="brief-panel-kicker">WATER / 02</span><h2>Watch the reporting rhythm.</h2></div><span class="brief-panel-meta">USGS · 15TH OF MONTH</span></div>
+            <div class="brief-water-number"><strong id="briefGroundwaterCount">—</strong><span>well observations</span></div>
+            <div class="brief-rhythm-shell"><svg id="briefGroundwaterChart" viewBox="0 0 520 130" role="img" aria-labelledby="briefGroundwaterChartTitle briefGroundwaterChartDesc"><title id="briefGroundwaterChartTitle">Monthly groundwater observation rhythm</title><desc id="briefGroundwaterChartDesc">USGS groundwater observations sampled on the fifteenth of each month.</desc></svg></div>
+            <div class="brief-panel-foot brief-water-foot"><span id="briefGroundwaterFoot">Loading 60 monthly snapshots…</span><span class="brief-dot-key"><i></i> observation count</span></div>
+          </article>
+          <article class="brief-panel brief-lens-panel">
+            <div class="brief-panel-head"><div><span class="brief-panel-kicker">THE SCORE / 03</span><h2>Build the score in layers.</h2></div><span class="brief-panel-meta">NO COMPOSITE YET</span></div>
+            <div class="brief-lens-list">
+              <div class="brief-lens-row"><span class="lens-index">01</span><div><strong>Water baseline</strong><small>surface + groundwater availability</small></div><b id="briefBaselineValue">NWAA / USGS</b></div>
+              <div class="brief-lens-row"><span class="lens-index">02</span><div><strong>Water volatility</strong><small>drought memory + monthly movement</small></div><b id="briefVolatilityValue">60 SNAPSHOTS</b></div>
+              <div class="brief-lens-row"><span class="lens-index">03</span><div><strong>Physical disruption</strong><small>event history + expected loss</small></div><b id="briefDisruptionValue">349K RECORDS</b></div>
+              <div class="brief-lens-row"><span class="lens-index">04</span><div><strong>Drought memory</strong><small>county-weeks at or above D1</small></div><b id="briefDroughtValue">—</b></div>
+            </div>
+            <div class="brief-score-note"><span class="note-mark">＋</span><p>Keep these signals separate until weights, dependencies, and local engineering assumptions are reviewed.</p></div>
+          </article>
+        </div>
+        <div class="brief-footer"><span><b id="briefFooterCoverage">2021—2025</b> · five-year evidence window</span><span>NOAA · USGS · USDM · modeled + observed</span><a href="data/historical/source-catalog.md" target="_blank" rel="noreferrer">Source catalog ↗</a></div>
+      </section>
       <div class="workspace-grid">
         <section class="window-panel map-panel" aria-label="Map view">
-          <div class="window-titlebar"><span>Map view</span><span class="titlebar-status" id="mapStatus">2 layers · 32 mapped rows</span></div>
+          <div class="window-titlebar"><span>Map view</span><span class="titlebar-actions"><span class="titlebar-status" id="mapStatus">2 layers · 32 mapped rows</span><button class="presentation-exit-button" id="exitPresentationButton" type="button">Exit presentation</button></span></div>
           <div class="map-toolbar">
             <label>Base map <select id="baseMapSelect"><option value="plain">US outline</option><option value="grid">US outline + grid</option></select></label>
             <label>Show labels <select id="labelModeSelect"><option value="state">State codes</option><option value="none">None</option></select></label>
@@ -52,6 +92,14 @@
             <label>Display<select id="aquiferFocusMode"><option value="highlight">Highlight selection</option><option value="filter">Show selection only</option></select></label>
             <button class="small-button" id="clearAquiferFocusButton" type="button">Clear selection</button>
             <span class="aquifer-focus-summary" id="aquiferFocusSummary">All representative systems visible.</span>
+          </div>
+          <div class="temporal-toolbar" id="temporalToolbar" hidden>
+            <div class="temporal-intro"><span>TIME LENS</span><strong id="temporalTitle">Selected layer</strong><small id="temporalMeta">Choose a time field in Layer properties.</small></div>
+            <label class="temporal-period">Period<select id="temporalValueSelect" aria-label="Select time period"><option value="">All periods</option></select></label>
+            <label class="temporal-scrubber">Scrub<input id="temporalSlider" type="range" min="0" max="1" value="0" step="1" aria-label="Scrub time period" /></label>
+            <button class="small-button" id="temporalPlayButton" type="button" aria-pressed="false">Play</button>
+            <button class="small-button" id="clearTemporalButton" type="button">All periods</button>
+            <span class="temporal-summary" id="temporalSummary">All periods shown.</span>
           </div>
           <div class="map-reading-strip" id="mapReadingStrip" aria-live="polite"></div>
           <div class="map-stage" id="mapStage">
@@ -112,20 +160,30 @@
               </div>
               <div class="sample-gallery real-data-gallery">
                 <div class="sample-gallery-heading"><strong>Real reference data</strong><span class="dataset-license">official sources</span></div>
+                <button class="sample-card real-data-card" type="button" data-real-dataset-key="gwdHistorical"><span class="sample-card-title">Observed groundwater depth · historical</span><small>Representative 2010 + 2022 snapshots</small><em>2,581 records · Time lens enabled</em></button>
                 <button class="sample-card real-data-card" type="button" data-real-dataset-key="gwd2022"><span class="sample-card-title">Observed groundwater depth · 2022</span><small>Most recent year in the large CONUS source file</small><em>1,274 records · density grid with GWD in feet</em></button>
+                <button class="sample-card real-data-card brief-data-card" type="button" data-real-dataset-key="gwdHistoryPack"><span class="sample-card-title">USGS groundwater · five-year history</span><small>Monthly nationwide observations · 2021–2025</small><em>83,839 rows · presentation evidence layer</em></button>
+                <button class="sample-card real-data-card brief-data-card" type="button" data-real-dataset-key="stormSummaryPack"><span class="sample-card-title">NOAA hazards · five-year state history</span><small>Storm pressure by state and event type</small><em>5,092 rows · time lens enabled</em></button>
                 <button class="sample-card real-data-card" type="button" data-real-dataset-key="usgsCurrent"><span class="sample-card-title">USGS groundwater · nationwide latest available</span><small>Latest geolocated monitoring-site snapshot</small><em>Depth to water · density grid · refreshable from USGS</em></button>
                 <button class="sample-card real-data-card" type="button" data-real-dataset-key="pnnl"><span class="sample-card-title">PNNL data center buildings</span><small>Existing building-level locations · 44 states</small><em>1,237 records · uniform dots</em></button>
                 <div class="remote-data-grid">
                   <button class="sample-card real-data-card" type="button" data-real-dataset-key="eiaPlants"><span class="sample-card-title">EIA power plants</span><small>Power-plant points · 2025 early release</small><em>16,900 records · real coordinates</em></button>
                   <button class="sample-card real-data-card" type="button" data-real-dataset-key="hifldSubstations"><span class="sample-card-title">HIFLD substations</span><small>High-voltage infrastructure points</small><em>77,945 records · nationwide snapshot</em></button>
-                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="waterServiceAreas"><span class="sample-card-title">USGS water service areas</span><small>Community public-supply coverage</small><em>18,806 polygons · simplified display export</em></button>
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="waterServiceAreas"><span class="sample-card-title">USGS public-supply service areas</span><small>Community water-system coverage · context</small><em>18,806 polygons · not treatment plants</em></button>
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="usdmCurrent"><span class="sample-card-title">U.S. Drought Monitor</span><small>Current weekly drought category</small><em>Current D0–D4 national polygons</em></button>
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="usdmChange"><span class="sample-card-title">Drought · 1-week change</span><small>Recent category movement</small><em>Current improving / worsening areas</em></button>
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="usdmFourWeekChange"><span class="sample-card-title">Drought · 4-week change</span><small>Short-term drought trajectory</small><em>Current four-week movement</em></button>
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="usdmFrequency"><span class="sample-card-title">Drought frequency · 2020–2025</span><small>Recent historical tendency</small><em>3,109 county centroids · % of D1-threshold weeks</em></button>
+                  <button class="sample-card real-data-card" type="button" data-real-dataset-key="usdoMonthly"><span class="sample-card-title">NOAA monthly drought outlook</span><small>Near-term forecast tendency</small><em>5 simplified polygons · persistence / development / removal</em></button>
                   <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="hifldLines"><span class="sample-card-title">HIFLD transmission lines</span><small>National lines · loads visible viewport</small><em>Auto-zooms · 1,200 feature cap</em></button>
+                  <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="streams"><span class="sample-card-title">USGS streams and rivers</span><small>~19k generalized reaches + named rivers</small><em>National network · zoom detail</em></button>
+                  <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="wastewaterTreatment"><span class="sample-card-title">EPA wastewater treatment works</span><small>Publicly owned treatment works · POTWs</small><em>National points · zoom detail · reported flow</em></button>
                   <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="wetlands"><span class="sample-card-title">National Wetlands Inventory</span><small>USFWS wetland polygons</small><em>Auto-zooms · live query</em></button>
                   <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="floodZones"><span class="sample-card-title">FEMA flood hazard zones</span><small>NFHL effective flood zones</small><em>Auto-zooms · live query</em></button>
                   <button class="sample-card remote-data-card" type="button" data-remote-dataset-key="padus"><span class="sample-card-title">PAD-US protected areas</span><small>USGS protected-land polygons</small><em>Auto-zooms · live query</em></button>
                 </div>
-                <div class="data-source-note"><strong>Included local files:</strong> PNNL/ODbL, EIA 860, a nationwide HIFLD substation snapshot, and a 250 m simplified export of USGS water-service areas. <strong>Viewport layers:</strong> HIFLD lines, USFWS NWI, FEMA NFHL, and USGS PAD-US are queried from public ArcGIS services; clicking a card zooms to the service’s readable scale automatically. <strong>Water source:</strong> <a href="https://www.usgs.gov/data/public-supply-water-service-areas-within-conterminous-united-states-2017" target="_blank" rel="noreferrer">official USGS WSA_v1 release ↗</a> and citation.</div>
-                <div class="data-source-note"><a href="https://api.waterdata.usgs.gov/docs/ogcapi" target="_blank" rel="noreferrer">USGS Water Data API ↗</a> · <a href="https://energyfactbook.com/data-centers/map/" target="_blank" rel="noreferrer">PNNL source and methodology ↗</a> · <a href="https://www.eia.gov/electricity/data/eia860/" target="_blank" rel="noreferrer">EIA source ↗</a> · <a href="https://services6.arcgis.com/OO2s4OoyCZkYJ6oE/arcgis/rest/services/Substations/FeatureServer/0" target="_blank" rel="noreferrer">HIFLD substation service ↗</a> · <a href="https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-download" target="_blank" rel="noreferrer">PAD-US download and citation ↗</a></div>
+                <div class="data-source-note"><strong>Included local files:</strong> PNNL/ODbL, EIA 860, a nationwide HIFLD substation snapshot, a 250 m simplified export of USGS water-service areas, current Drought Monitor snapshots, recent county drought frequency, the current NOAA monthly drought outlook, and a representative USGS NHD stream snapshot. <strong>Viewport layers:</strong> HIFLD lines, USGS NHD, EPA wastewater treatment works, USFWS NWI, FEMA NFHL, and USGS PAD-US are queried from public ArcGIS services; the stream card loads its bundled snapshot immediately and retains a live tiled query path. <strong>Wastewater:</strong> the EPA card filters the CWA/NPDES facility layer to POTWs (publicly owned treatment works) and shows reported facility attributes where available.</div>
+                <div class="data-source-note"><a href="https://api.waterdata.usgs.gov/docs/ogcapi" target="_blank" rel="noreferrer">USGS Water Data API ↗</a> · <a href="https://hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer" target="_blank" rel="noreferrer">USGS NHD flowlines ↗</a> · <a href="https://www.usgs.gov/national-hydrography/nhdplus-high-resolution" target="_blank" rel="noreferrer">USGS NHDPlus HR ↗</a> · <a href="https://echogeo.epa.gov/arcgis/rest/services/ECHO/Facilities/MapServer/2" target="_blank" rel="noreferrer">EPA ECHO CWA facilities ↗</a> · <a href="https://echo.epa.gov/help/facility-search/search-criteria-help" target="_blank" rel="noreferrer">EPA facility definitions ↗</a> · <a href="https://energyfactbook.com/data-centers/map/" target="_blank" rel="noreferrer">PNNL source and methodology ↗</a> · <a href="https://www.eia.gov/electricity/data/eia860/" target="_blank" rel="noreferrer">EIA source ↗</a> · <a href="https://www.drought.gov/data-maps-tools/us-monthly-drought-outlook" target="_blank" rel="noreferrer">NOAA monthly drought outlook ↗</a> · <a href="https://usdmdataservices.unl.edu/api/" target="_blank" rel="noreferrer">USDM statistics service ↗</a> · <a href="https://services6.arcgis.com/OO2s4OoyCZkYJ6oE/arcgis/rest/services/Substations/FeatureServer/0" target="_blank" rel="noreferrer">HIFLD substation service ↗</a> · <a href="https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-download" target="_blank" rel="noreferrer">PAD-US download and citation ↗</a></div>
               </div>
               <div class="dialog-error" id="pasteError" hidden></div>
             </div>

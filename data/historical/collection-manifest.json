@@ -1,0 +1,389 @@
+{
+  "generated_at": "2026-09-11T17:21:56.498Z",
+  "lookback": {
+    "start_year": 2021,
+    "end_year": 2025
+  },
+  "refreshed": false,
+  "sources": [
+    {
+      "name": "NOAA Storm Events Database",
+      "coverage": "2021-2025",
+      "source": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/",
+      "raw_files": [
+        {
+          "year": 2021,
+          "filename": "StormEvents_details-ftp_v1.0_d2021_c20260323.csv.gz",
+          "url": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2021_c20260323.csv.gz",
+          "records": 61389
+        },
+        {
+          "year": 2022,
+          "filename": "StormEvents_details-ftp_v1.0_d2022_c20260625.csv.gz",
+          "url": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2022_c20260625.csv.gz",
+          "records": 69887
+        },
+        {
+          "year": 2023,
+          "filename": "StormEvents_details-ftp_v1.0_d2023_c20260323.csv.gz",
+          "url": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2023_c20260323.csv.gz",
+          "records": 75593
+        },
+        {
+          "year": 2024,
+          "filename": "StormEvents_details-ftp_v1.0_d2024_c20260728.csv.gz",
+          "url": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2024_c20260728.csv.gz",
+          "records": 69801
+        },
+        {
+          "year": 2025,
+          "filename": "StormEvents_details-ftp_v1.0_d2025_c20260819.csv.gz",
+          "url": "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2025_c20260819.csv.gz",
+          "records": 72360
+        }
+      ],
+      "derived_files": [
+        "data/historical/derived/noaa_storm_events_2021_2025.csv",
+        "data/historical/derived/noaa_storm_events_state_year_type_2021_2025.csv"
+      ],
+      "rows": {
+        "event_records": 349030,
+        "state_year_event_type_rows": 5092
+      }
+    },
+    {
+      "name": "USGS Water Data for the Nation daily groundwater levels",
+      "coverage": "2021-2025",
+      "source": "https://api.waterdata.usgs.gov/ogcapi/v1/collections/daily/items",
+      "query": {
+        "parameter_code": "72019",
+        "statistic_id": "00003",
+        "cadence": "one exact-day snapshot on the 15th of each month"
+      },
+      "raw_files": [
+        {
+          "month": "2021-01",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-01.json",
+          "rows": 1374
+        },
+        {
+          "month": "2021-02",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-02.json",
+          "rows": 1356
+        },
+        {
+          "month": "2021-03",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-03.json",
+          "rows": 1360
+        },
+        {
+          "month": "2021-04",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-04.json",
+          "rows": 1399
+        },
+        {
+          "month": "2021-05",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-05.json",
+          "rows": 1407
+        },
+        {
+          "month": "2021-06",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-06.json",
+          "rows": 1406
+        },
+        {
+          "month": "2021-07",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-07.json",
+          "rows": 1405
+        },
+        {
+          "month": "2021-08",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-08.json",
+          "rows": 1416
+        },
+        {
+          "month": "2021-09",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-09.json",
+          "rows": 1418
+        },
+        {
+          "month": "2021-10",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-10.json",
+          "rows": 1411
+        },
+        {
+          "month": "2021-11",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-11.json",
+          "rows": 1416
+        },
+        {
+          "month": "2021-12",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2021-12.json",
+          "rows": 1412
+        },
+        {
+          "month": "2022-01",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-01.json",
+          "rows": 1418
+        },
+        {
+          "month": "2022-02",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-02.json",
+          "rows": 1436
+        },
+        {
+          "month": "2022-03",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-03.json",
+          "rows": 1405
+        },
+        {
+          "month": "2022-04",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-04.json",
+          "rows": 1423
+        },
+        {
+          "month": "2022-05",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-05.json",
+          "rows": 1430
+        },
+        {
+          "month": "2022-06",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-06.json",
+          "rows": 1428
+        },
+        {
+          "month": "2022-07",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-07.json",
+          "rows": 1423
+        },
+        {
+          "month": "2022-08",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-08.json",
+          "rows": 1399
+        },
+        {
+          "month": "2022-09",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-09.json",
+          "rows": 1396
+        },
+        {
+          "month": "2022-10",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-10.json",
+          "rows": 1396
+        },
+        {
+          "month": "2022-11",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-11.json",
+          "rows": 1374
+        },
+        {
+          "month": "2022-12",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2022-12.json",
+          "rows": 1399
+        },
+        {
+          "month": "2023-01",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-01.json",
+          "rows": 1381
+        },
+        {
+          "month": "2023-02",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-02.json",
+          "rows": 1398
+        },
+        {
+          "month": "2023-03",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-03.json",
+          "rows": 1415
+        },
+        {
+          "month": "2023-04",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-04.json",
+          "rows": 1416
+        },
+        {
+          "month": "2023-05",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-05.json",
+          "rows": 1392
+        },
+        {
+          "month": "2023-06",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-06.json",
+          "rows": 1390
+        },
+        {
+          "month": "2023-07",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-07.json",
+          "rows": 1386
+        },
+        {
+          "month": "2023-08",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-08.json",
+          "rows": 1390
+        },
+        {
+          "month": "2023-09",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-09.json",
+          "rows": 1463
+        },
+        {
+          "month": "2023-10",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-10.json",
+          "rows": 1452
+        },
+        {
+          "month": "2023-11",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-11.json",
+          "rows": 1442
+        },
+        {
+          "month": "2023-12",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2023-12.json",
+          "rows": 1445
+        },
+        {
+          "month": "2024-01",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-01.json",
+          "rows": 1444
+        },
+        {
+          "month": "2024-02",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-02.json",
+          "rows": 1454
+        },
+        {
+          "month": "2024-03",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-03.json",
+          "rows": 1456
+        },
+        {
+          "month": "2024-04",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-04.json",
+          "rows": 1453
+        },
+        {
+          "month": "2024-05",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-05.json",
+          "rows": 1443
+        },
+        {
+          "month": "2024-06",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-06.json",
+          "rows": 1438
+        },
+        {
+          "month": "2024-07",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-07.json",
+          "rows": 1442
+        },
+        {
+          "month": "2024-08",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-08.json",
+          "rows": 1441
+        },
+        {
+          "month": "2024-09",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-09.json",
+          "rows": 1441
+        },
+        {
+          "month": "2024-10",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-10.json",
+          "rows": 1400
+        },
+        {
+          "month": "2024-11",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-11.json",
+          "rows": 1396
+        },
+        {
+          "month": "2024-12",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2024-12.json",
+          "rows": 1383
+        },
+        {
+          "month": "2025-01",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-01.json",
+          "rows": 1371
+        },
+        {
+          "month": "2025-02",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-02.json",
+          "rows": 1366
+        },
+        {
+          "month": "2025-03",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-03.json",
+          "rows": 1357
+        },
+        {
+          "month": "2025-04",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-04.json",
+          "rows": 1333
+        },
+        {
+          "month": "2025-05",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-05.json",
+          "rows": 1342
+        },
+        {
+          "month": "2025-06",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-06.json",
+          "rows": 1331
+        },
+        {
+          "month": "2025-07",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-07.json",
+          "rows": 1324
+        },
+        {
+          "month": "2025-08",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-08.json",
+          "rows": 1318
+        },
+        {
+          "month": "2025-09",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-09.json",
+          "rows": 1321
+        },
+        {
+          "month": "2025-10",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-10.json",
+          "rows": 1308
+        },
+        {
+          "month": "2025-11",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-11.json",
+          "rows": 1300
+        },
+        {
+          "month": "2025-12",
+          "path": "data/historical/raw/usgs_groundwater/groundwater_2025-12.json",
+          "rows": 1300
+        }
+      ],
+      "derived_files": [
+        "data/historical/derived/usgs_groundwater_monthly_2021_2025.csv"
+      ],
+      "rows": {
+        "observations": 83839
+      }
+    }
+  ],
+  "existing_related_data": [
+    {
+      "path": "data/raw/usdm_county_drought_frequency_2020_2025.csv",
+      "description": "USDM county-week drought frequency and severity summary already bundled in Atlas."
+    },
+    {
+      "path": "data/raw/usdo_monthly_current.geojson",
+      "description": "US Drought Monitor monthly current layer already bundled in Atlas."
+    }
+  ],
+  "limitations": [
+    "Groundwater is a nationwide sample of daily observations on the 15th of each month, not a complete daily archive; wells report on different schedules and are not equally representative.",
+    "NOAA Storm Events detail rows are event/location records. The derived summary includes both unique event IDs and detail-record counts so aggregation assumptions remain visible.",
+    "Storm damage fields use NOAA's abbreviated K/M/B notation converted to nominal U.S. dollars; blank or nonnumeric damage fields are recorded as zero.",
+    "These historical layers are screening inputs. A site decision still needs local permitting, utility, aquifer, floodplain, reliability, and engineering review."
+  ]
+}

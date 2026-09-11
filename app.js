@@ -39,11 +39,15 @@ let mapPointer = null;
 let mapDragMoved = false;
 let mapEmphasis = "selected";
 let mapPresentation = "focus";
+let presentationMode = false;
+let presentationSnapshot = null;
 let aquiferHoverFrame;
 let pendingAquiferHover;
 let boundaryMode = "states";
 let aquiferLayerId = null;
 let aquiferLoadPromise = null;
+let temporalPlaybackTimer = null;
+let temporalPlaybackLayerId = null;
 
 const SAMPLE_STRESS = [
   { state: "WA", value: 34, note: "low pressure" }, { state: "OR", value: 46, note: "coastal basin" }, { state: "CA", value: 81, note: "high pressure" }, { state: "NV", value: 74, note: "dry basin" }, { state: "AZ", value: 92, note: "critical" }, { state: "UT", value: 67, note: "watch" }, { state: "CO", value: 59, note: "mixed" }, { state: "TX", value: 88, note: "high pressure" }, { state: "MN", value: 26, note: "low pressure" }, { state: "WI", value: 31, note: "low pressure" }, { state: "IL", value: 48, note: "stable" }, { state: "FL", value: 63, note: "watch" }, { state: "NY", value: 22, note: "low pressure" }, { state: "PA", value: 37, note: "stable" }, { state: "GA", value: 54, note: "mixed" }, { state: "NC", value: 42, note: "stable" }, { state: "MT", value: 51, note: "mixed" }, { state: "ND", value: 29, note: "low pressure" }, { state: "OK", value: 72, note: "dry basin" }, { state: "NM", value: 86, note: "critical" }
@@ -140,6 +144,62 @@ const REAL_DATASETS = {
       notes: "Representative 2022 display subset from the large observed GWD file. It keeps up to six records per 2° grid cell, with one record per month where available, so the GUI has broad spatial and seasonal coverage without loading the multi-gigabyte source. This is for visual exploration only, not modeling or inference."
     }
   },
+  gwdHistorical: {
+    file: "sample_gwd_historical.csv",
+    name: "Observed groundwater depth · 2010 + 2022 snapshots",
+    source: "features_observaed_gwd_CONUS_20012020.csv · representative historical display subset",
+    options: {
+      role: "context",
+      color: "#397a82",
+      displayMode: "density",
+      densityAggregation: "average",
+      densityColorScale: "sequential",
+      measureField: "gwd",
+      labelField: "id",
+      timeField: "year",
+      units: "ft",
+      markerSize: 3.5,
+      opacity: .78,
+      notes: "Compact time-based display sample combining representative 2010 and 2022 groundwater-depth snapshots. Use the Time lens to switch periods; it is for visual exploration only, not trend inference or modeling."
+    }
+  },
+  gwdHistoryPack: {
+    file: "data/historical/derived/usgs_groundwater_monthly_2021_2025.csv",
+    name: "USGS groundwater · five-year history",
+    source: "USGS Water Data API · monthly 15th-day snapshots · historical risk pack",
+    options: {
+      role: "context",
+      color: "#397a82",
+      displayMode: "density",
+      densityAggregation: "average",
+      densityColorScale: "sequential",
+      measureField: "groundwater_level_ft",
+      labelField: "site_id",
+      timeField: "observation_date",
+      units: "ft below land surface",
+      markerSize: 3,
+      opacity: .78,
+      maxRenderFeatures: 3400,
+      notes: "Five-year historical display pack of nationwide USGS groundwater-level observations sampled on the 15th of each month. This is an uneven monitoring network and a screening layer, not a balanced panel or a site-specific sustainable-yield determination."
+    }
+  },
+  stormSummaryPack: {
+    file: "data/historical/derived/noaa_storm_events_state_year_type_2021_2025.csv",
+    name: "NOAA hazards · five-year state history",
+    source: "NOAA Storm Events Database · state/year/event-type summary · historical risk pack",
+    options: {
+      role: "constraint",
+      color: "#c45b28",
+      geometryType: "states",
+      regionField: "state",
+      measureField: "detail_records",
+      labelField: "event_type",
+      timeField: "year",
+      units: "reported records",
+      opacity: .72,
+      notes: "State-level summary of NOAA Storm Events detail records from 2021 through 2025. Detail records can exceed unique physical events; use this as a hazard-pressure screen and pair it with FEMA NRI and local hazard engineering."
+    }
+  },
   usgsCurrent: {
     file: "usgs_current_gwd.csv",
     name: "USGS groundwater · nationwide latest available",
@@ -222,6 +282,93 @@ const REAL_DATASETS = {
       maxRenderFeatures: 5000,
       notes: "USGS aggregated community water-system service areas active between 2010 and 2020. The bundled display export is converted to WGS84 and simplified with a 250 m topology-preserving tolerance; use the official WSA_v1 source for authoritative boundaries or analysis."
     }
+  },
+  usdmCurrent: {
+    file: "data/raw/usdm_current.geojson",
+    name: "U.S. Drought Monitor · current",
+    source: "NOAA / NDMC / USDA / NASA · current USDM GeoJSON",
+    options: {
+      role: "context",
+      color: "#c58b2a",
+      geometryDisplay: "fill",
+      labelField: "DM",
+      featureColorField: "DM",
+      strokeWidth: .8,
+      opacity: .34,
+      notes: "Current weekly U.S. Drought Monitor categories D0–D4. This is a national drought-context layer; it is not a site-specific groundwater or water-rights determination."
+    }
+  },
+  usdmChange: {
+    file: "data/raw/usdm_change.geojson",
+    name: "U.S. Drought Monitor · 1-week change",
+    source: "NOAA / NDMC / USDA / NASA · weekly-change GeoJSON",
+    options: {
+      role: "context",
+      color: "#a94c45",
+      geometryDisplay: "fill",
+      labelField: "DN",
+      featureColorField: "DN",
+      strokeWidth: .8,
+      opacity: .3,
+      notes: "Current one-week change in U.S. Drought Monitor category. Use alongside the current category layer to distinguish worsening from improving conditions."
+    }
+  },
+  usdmFourWeekChange: {
+    file: "data/raw/usdm_4wk_change.geojson",
+    name: "U.S. Drought Monitor · 4-week change",
+    source: "NOAA / NDMC / USDA / NASA · four-week-change GeoJSON",
+    options: {
+      role: "context",
+      color: "#8764a6",
+      geometryDisplay: "fill",
+      labelField: "DN",
+      featureColorField: "DN",
+      strokeWidth: .8,
+      opacity: .26,
+      notes: "Current four-week change in U.S. Drought Monitor category. This file is a bundled snapshot and should be refreshed from the NCEI directory for a current deployment."
+    }
+  },
+  usdmFrequency: {
+    file: "data/raw/usdm_county_drought_frequency_2020_2025.csv",
+    name: "USDM drought frequency · 2020–2025",
+    source: "U.S. Drought Monitor county statistics API · Census 2025 county centroids",
+    options: {
+      role: "context",
+      color: "#b75f3c",
+      displayMode: "density",
+      densityAggregation: "average",
+      densityColorScale: "sequential",
+      latitudeField: "latitude",
+      longitudeField: "longitude",
+      regionField: "state",
+      measureField: "frequency_pct",
+      labelField: "county",
+      units: "% of weeks",
+      markerSize: 3,
+      opacity: .76,
+      maxRenderFeatures: 3400,
+      detailFields: ["drought_weeks", "observation_weeks", "drought_level", "minimum_weeks", "period_start", "period_end", "fips"],
+      notes: "Recent historical frequency snapshot at county representative points. Each cell shows the average share of 314 USDM observation weeks from 2020 through 2025 meeting the selected D1 threshold, with a minimum four-week event rule. This is a screening display, not a drought forecast, local water-supply determination, or climate-normal statistic. Use the state focus control to inspect one state at a time."
+    }
+  },
+  usdoMonthly: {
+    file: "data/raw/usdo_monthly_current.geojson",
+    name: "NOAA Monthly Drought Outlook · current",
+    source: "NOAA CPC / NCEI · simplified current monthly outlook GeoJSON",
+    options: {
+      role: "context",
+      color: "#8764a6",
+      geometryDisplay: "fill",
+      labelField: "Outlook",
+      featureColorField: "Outlook",
+      featureColorOverrides: { Development: "#b95d3c", Improvement: "#d2a34e", No_Drought: "#d6ddd8", Persistence: "#b27739", Removal: "#5b9c78" },
+      measureField: "US_PRCNT",
+      units: "% of U.S. area",
+      strokeWidth: .9,
+      opacity: .42,
+      detailFields: ["Fcst_Date", "Target", "AREA"],
+      notes: "Categorical NOAA CPC outlook for the upcoming month: persistence, improvement, removal, development, or no drought. This is a forecast tendency, not a numeric probability surface. The bundled polygons are simplified from NOAA's current national GeoJSON for responsive display; refresh with scripts/build_usdo_display_snapshot.mjs before a time-sensitive deployment."
+    }
   }
 };
 
@@ -234,6 +381,79 @@ const REMOTE_DATASETS = {
     maxFeatures: 1200,
     minZoom: 1.35,
     options: { role: "infrastructure", color: "#2f76a5", geometryDisplay: "outline", strokeWidth: 1.2, opacity: .8, labelField: "ID", featureColorField: "VOLT_CLASS", notes: "The national HIFLD service contains 177,944 line features. Atlas requests only the current map viewport after you zoom in, capped at 1,200 returned features for readability." }
+  },
+  streams: {
+    name: "USGS streams and rivers · viewport",
+    source: "USGS NHD · generalized national flowline service",
+    url: "https://hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer/4",
+    where: "FTYPE IN ('StreamRiver','ArtificialPath') AND ((StreamOrde>=4 AND LENGTHKM>=5) OR (StreamOrde=3 AND LENGTHKM>=10))",
+    zoomedWhere: "FTYPE IN ('StreamRiver','ArtificialPath')",
+    fallbackFile: "sample_streams_nhdplus.geojson",
+    localFirst: true,
+    tileColumns: 4,
+    tileRows: 2,
+    tileMaxZoom: 2.2,
+    priorityNames: ["Mississippi River", "Missouri River", "Ohio River", "Arkansas River", "Rio Grande", "Colorado River", "Columbia River", "Snake River", "Tennessee River", "Red River"],
+    priorityBounds: {
+      "Mississippi River": [-97, 28, -87, 49],
+      "Missouri River": [-113, 35, -88, 50],
+      "Ohio River": [-92, 35, -78, 42],
+      "Arkansas River": [-106, 34, -89, 38],
+      "Rio Grande": [-109, 25, -95, 38],
+      "Colorado River": [-116, 30, -107, 41],
+      "Columbia River": [-125, 42, -116, 50],
+      "Snake River": [-120, 40, -108, 48],
+      "Tennessee River": [-91, 32, -81, 39],
+      "Red River": [-107, 30, -90, 39]
+    },
+    priorityLimit: 120,
+    outFields: "OBJECTID,GNIS_NAME,FTYPE,StreamOrde,TotDASqKM,QA_MA,VA_MA,LENGTHKM,REACHCODE,COMID,RESOLUTION",
+    maxFeatures: 5000,
+    maxRenderFeatures: 16000,
+    nationalMaxRenderFeatures: 10000,
+    nationalMaxZoom: 2.2,
+    minZoom: 1.35,
+    options: {
+      role: "context",
+      color: "#2f76a5",
+      geometryDisplay: "outline",
+      strokeWidth: 1.25,
+      lineWidthByMeasure: true,
+      emphasizeNamedLines: true,
+      opacity: .78,
+      labelField: "GNIS_NAME",
+      featureColorField: "StreamOrde",
+      measureField: "QA_MA",
+      units: "cfs",
+      detailFields: ["StreamOrde", "TotDASqKM", "VA_MA", "LENGTHKM", "RESOLUTION", "COMID"],
+      notes: "USGS NHD generalized stream and river flowlines loaded for the visible viewport. The bundled example includes a broad national network of longer order-3 reaches plus order-4-and-higher reaches, with named major-river corridors on top. The live path uses tiled viewport queries and priority requests for major names; the national view renders a readable subset and zoomed views render more. NHD includes both StreamRiver and ArtificialPath features; named major rivers such as the Mississippi are commonly represented by ArtificialPath. QA_MA is the source's modeled mean-annual flow estimate in cubic feet per second (cfs), not a live instantaneous gage reading. StreamOrde is relative network hierarchy, TotDASqKM is cumulative drainage area in square kilometers, VA_MA is estimated velocity in feet per second, and LENGTHKM is source reach length."
+    }
+  },
+  wastewaterTreatment: {
+    name: "EPA wastewater treatment works · viewport",
+    source: "EPA ECHO CWA/NPDES · POTW facility layer",
+    url: "https://echogeo.epa.gov/arcgis/rest/services/ECHO/Facilities/MapServer/2",
+    where: "CWP_FACILITY_TYPE_INDICATOR='POTW'",
+    outFields: "OBJECTID,CWP_NAME,CWP_STATE,CWP_CITY,CWP_COUNTY,CWP_STATUS,CWP_PERMIT_STATUS_CODE,CWP_PERMIT_STATUS_DESC,CWP_FACILITY_TYPE_INDICATOR,CWP_MAJOR_MINOR_STATUS_FLAG,FAC_LAT,FAC_LONG,FAC_DERIVED_HUC,FAC_DERIVED_WBD,FAC_DERIVED_WBD_NAME,DFR_URL,PERMIT_NAME,PERMIT_COMPONENTS,CWP_TOTAL_DESIGN_FLOW_NMBR,CWP_ACTUAL_AVERAGE_FLOW_NMBR",
+    maxFeatures: 7000,
+    queryMaxFeatures: 1000,
+    tileColumns: 4,
+    tileRows: 2,
+    tileMaxZoom: 2.2,
+    minZoom: 1.35,
+    options: {
+      role: "infrastructure",
+      color: "#b75f3c",
+      displayMode: "dots",
+      labelField: "CWP_NAME",
+      featureColorField: "CWP_MAJOR_MINOR_STATUS_FLAG",
+      measureField: "CWP_ACTUAL_AVERAGE_FLOW_NMBR",
+      units: "MGD",
+      markerSize: 4,
+      opacity: .84,
+      detailFields: ["CWP_CITY", "CWP_STATE", "CWP_COUNTY", "CWP_PERMIT_STATUS_DESC", "CWP_STATUS", "CWP_TOTAL_DESIGN_FLOW_NMBR", "FAC_DERIVED_WBD_NAME", "PERMIT_NAME", "PERMIT_COMPONENTS", "DFR_URL"],
+      notes: "EPA ECHO Clean Water Act / NPDES points filtered to POTWs (publicly owned treatment works). The layer shows reported facility locations, permit status, compliance status, facility size class, and reported flow where available. This is a display/reference layer, not a complete inventory of every treatment component or a treatment-capacity model; confirm current operating status and capacity with the linked EPA facility record."
+    }
   },
   wetlands: {
     name: "National Wetlands Inventory · viewport",
@@ -265,7 +485,7 @@ const REMOTE_DATASETS = {
 };
 
 const els = {
-  mapSvg: document.getElementById("mapSvg"), mapLabels: document.getElementById("mapLabels"), statePaths: document.getElementById("statePaths"), aquiferHitVisuals: document.getElementById("aquiferHitVisuals"), layerVisuals: document.getElementById("layerVisuals"), mapViewport: document.getElementById("mapViewport"), mapGridRect: document.getElementById("mapGridRect"), zoomLabel: document.getElementById("zoomLabel"), boundaryModeSelect: document.getElementById("boundaryModeSelect"), aquiferFocusBar: document.getElementById("aquiferFocusBar"), aquiferFocusType: document.getElementById("aquiferFocusType"), aquiferFocusName: document.getElementById("aquiferFocusName"), aquiferFocusMode: document.getElementById("aquiferFocusMode"), aquiferFocusSummary: document.getElementById("aquiferFocusSummary"),
+  mapSvg: document.getElementById("mapSvg"), mapLabels: document.getElementById("mapLabels"), statePaths: document.getElementById("statePaths"), aquiferHitVisuals: document.getElementById("aquiferHitVisuals"), layerVisuals: document.getElementById("layerVisuals"), mapViewport: document.getElementById("mapViewport"), mapGridRect: document.getElementById("mapGridRect"), zoomLabel: document.getElementById("zoomLabel"), boundaryModeSelect: document.getElementById("boundaryModeSelect"), aquiferFocusBar: document.getElementById("aquiferFocusBar"), aquiferFocusType: document.getElementById("aquiferFocusType"), aquiferFocusName: document.getElementById("aquiferFocusName"), aquiferFocusMode: document.getElementById("aquiferFocusMode"), aquiferFocusSummary: document.getElementById("aquiferFocusSummary"), temporalToolbar: document.getElementById("temporalToolbar"), temporalTitle: document.getElementById("temporalTitle"), temporalMeta: document.getElementById("temporalMeta"), temporalValueSelect: document.getElementById("temporalValueSelect"), temporalSlider: document.getElementById("temporalSlider"), temporalPlayButton: document.getElementById("temporalPlayButton"), temporalSummary: document.getElementById("temporalSummary"),
   mapEmpty: document.getElementById("mapEmpty"), mapTooltip: document.getElementById("mapTooltip"), mapLegend: document.getElementById("mapLegend"), mapReadingStrip: document.getElementById("mapReadingStrip"), mapSingleView: document.getElementById("mapSingleView"), mapMultiplesView: document.getElementById("mapMultiplesView"), mapPresentationSelect: document.getElementById("mapPresentationSelect"), layerEmphasisSelect: document.getElementById("layerEmphasisSelect"), layerList: document.getElementById("layerList"), layerCount: document.getElementById("layerCount"),
   mapStatus: document.getElementById("mapStatus"), mapRowSummary: document.getElementById("mapRowSummary"), mapMeasureSummary: document.getElementById("mapMeasureSummary"), fileStatus: document.getElementById("fileStatus"),
   propertyLayerStatus: document.getElementById("propertyLayerStatus"), noSelection: document.getElementById("noSelection"), propertyForm: document.getElementById("propertyForm"), visualRecipe: document.getElementById("visualRecipe"),
@@ -375,7 +595,51 @@ function stateFilterOptions(layer) {
   return [...options.values()].sort((a, b) => a.label.localeCompare(b.label));
 }
 
-function filterIsActive(layer) { return Boolean(layer.filterTypeValue || layer.filterNameValue || layer.stateFilterValue); }
+function temporalBucket(value) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  const match = text.match(/^(\d{4})(?:[-/](\d{1,2}))?(?:[-/](\d{1,2}))?/);
+  if (match) return match[2] ? `${match[1]}-${match[2].padStart(2, "0")}` : match[1];
+  const timestamp = Date.parse(text);
+  if (Number.isFinite(timestamp)) {
+    const date = new Date(timestamp);
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+  }
+  return text;
+}
+
+function temporalSortKey(value) {
+  const bucket = temporalBucket(value);
+  const match = bucket.match(/^(\d{4})(?:-(\d{2}))?$/);
+  return match ? Number(match[1]) * 100 + Number(match[2] || 0) : bucket;
+}
+
+function temporalLabel(value) {
+  const bucket = temporalBucket(value);
+  const month = bucket.match(/^(\d{4})-(\d{2})$/);
+  if (month) return new Date(Date.UTC(Number(month[1]), Number(month[2]) - 1, 1)).toLocaleDateString(undefined, { month: "short", year: "numeric", timeZone: "UTC" });
+  return bucket;
+}
+
+function temporalOptions(layer) {
+  if (!layer?.timeField) return [];
+  layer._temporalOptionCache ||= new Map();
+  if (layer._temporalOptionCache.has(layer.timeField)) return layer._temporalOptionCache.get(layer.timeField);
+  const options = [...new Set(layer.data.map((row) => temporalBucket(row[layer.timeField])).filter(Boolean))].sort((left, right) => {
+    const leftKey = temporalSortKey(left); const rightKey = temporalSortKey(right);
+    return typeof leftKey === "number" && typeof rightKey === "number" ? leftKey - rightKey : String(leftKey).localeCompare(String(rightKey));
+  }).map((value) => ({ value, label: temporalLabel(value) }));
+  layer._temporalOptionCache.set(layer.timeField, options);
+  return options;
+}
+
+function timeFilterIsActive(layer) { return Boolean(layer?.timeFilterValue); }
+
+function rowMatchesTemporalFilter(layer, row) {
+  return !timeFilterIsActive(layer) || temporalBucket(row[layer.timeField]) === layer.timeFilterValue;
+}
+
+function filterIsActive(layer) { return Boolean(layer.filterTypeValue || layer.filterNameValue || layer.stateFilterValue || layer.timeFilterValue); }
 
 function hasVisibleSelectedLayer() { return Boolean(selectedLayerId && layers.some((layer) => layer.id === selectedLayerId && layer.visible)); }
 
@@ -404,7 +668,7 @@ function rowMatchesFilter(layer, row) {
     const rowRegion = String(row[layer.regionField] ?? "").trim(); const normalizedRegion = normalizeState(rowRegion);
     stateMatches = normalizedRegion === layer.stateFilterValue || rowRegion === layer.stateFilterValue;
   }
-  return typeMatches && nameMatches && stateMatches;
+  return typeMatches && nameMatches && stateMatches && rowMatchesTemporalFilter(layer, row);
 }
 
 function filterOpacity(layer, row) {
@@ -418,13 +682,14 @@ function activeFilterDescription(layer) {
   if (layer.filterTypeValue) filters.push(`type: ${layer.filterTypeValue}`);
   if (layer.filterNameValue) filters.push(`name: ${layer.filterNameValue}`);
   if (layer.stateFilterValue) filters.push(`state: ${STATE_NAMES[layer.stateFilterValue] || layer.stateFilterValue}`);
+  if (layer.timeFilterValue) filters.push(`period: ${temporalLabel(layer.timeFilterValue)}`);
   return filters.join(" + ");
 }
 
 function refreshFeatureColorMap(layer) {
   const values = layer.featureColorField ? [...new Set(layer.data.map((row) => String(row[layer.featureColorField] ?? "").trim()).filter(Boolean))].sort() : [];
   layer.featureColorWarning = values.length > FEATURE_PALETTE.length ? `${values.length} categories; choose a broader field for distinct colors.` : "";
-  layer.featureColorMap = values.length > FEATURE_PALETTE.length ? {} : Object.fromEntries(values.map((value, index) => [value, FEATURE_PALETTE[index]]));
+  layer.featureColorMap = values.length > FEATURE_PALETTE.length ? {} : Object.fromEntries(values.map((value, index) => [value, layer.featureColorOverrides?.[value] || FEATURE_PALETTE[index]]));
 }
 
 function featureColor(layer, row) { return layer.featureColorField && layer.featureColorMap?.[String(row[layer.featureColorField] ?? "").trim()] || layer.color || "#c45b28"; }
@@ -439,7 +704,7 @@ function createLayer(name, data, source = "in-memory") {
   const time = findField(fields, ["date", "time", "year", "month"]);
   const displayMode = ["points", "Point", "MultiPoint"].includes(geometry.type) ? "dots" : "bubbles";
   const aquiferFields = inferAquiferFields(fields);
-  const layer = { id: `layer-${Date.now()}-${layerSerial++}`, name: name || `Layer ${layerSerial}`, source, data, fields, geometryType: geometry.type, latitudeField: geometry.latitude || "", longitudeField: geometry.longitude || "", regionField: geometry.region || "", measureField: measure, labelField: label || "", timeField: time || "", displayMode, densityAggregation: "count", densityColorScale: "sequential", role: "context", geometryDisplay: "auto", featureColorField: inferFeatureColorField(fields), featureColorMap: {}, filterTypeField: aquiferFields.type || "", filterNameField: aquiferFields.name || "", filterTypeValue: "", filterNameValue: "", stateFilterValue: "", filterMode: "highlight", color: LAYER_COLORS[(layerSerial - 1) % LAYER_COLORS.length], markerSize: 5, strokeWidth: 1.5, showLabels: false, units: "", opacity: .8, notes: "", visible: true };
+  const layer = { id: `layer-${Date.now()}-${layerSerial++}`, name: name || `Layer ${layerSerial}`, source, data, fields, geometryType: geometry.type, latitudeField: geometry.latitude || "", longitudeField: geometry.longitude || "", regionField: geometry.region || "", measureField: measure, labelField: label || "", timeField: time || "", timeFilterValue: "", displayMode, densityAggregation: "count", densityColorScale: "sequential", role: "context", geometryDisplay: "auto", featureColorField: inferFeatureColorField(fields), featureColorMap: {}, filterTypeField: aquiferFields.type || "", filterNameField: aquiferFields.name || "", filterTypeValue: "", filterNameValue: "", stateFilterValue: "", filterMode: "highlight", color: LAYER_COLORS[(layerSerial - 1) % LAYER_COLORS.length], markerSize: 5, strokeWidth: 1.5, showLabels: false, units: "", opacity: .8, notes: "", visible: true };
   return layer;
 }
 
@@ -722,6 +987,7 @@ function isPointLayer(layer) { return !isCoverageLayer(layer) && ["points", "Poi
 
 function refreshLayerCaches(layer) {
   layer._fieldValueCache = new Map();
+  layer._temporalOptionCache = new Map();
   refreshFeatureColorMap(layer);
   layer._measureMax = layer.data.reduce((maximum, row) => {
     const value = numericValue(row[layer.measureField]);
@@ -744,7 +1010,7 @@ function refreshLayerCaches(layer) {
 }
 
 function layerMappingSignature(layer) {
-  return [layer.geometryType, layer.latitudeField, layer.longitudeField, layer.regionField, layer.measureField, layer.labelField, layer.featureColorField].join("\u0001");
+  return [layer.geometryType, layer.latitudeField, layer.longitudeField, layer.regionField, layer.measureField, layer.labelField, layer.timeField, layer.featureColorField].join("\u0001");
 }
 
 function getVisiblePointRows(layer) {
@@ -769,6 +1035,7 @@ function getVisiblePointRows(layer) {
     const screenY = point ? point.y * mapZoom + mapPanY : Number.NaN;
     return { row, index, point, screenX, screenY };
   }).filter(({ row, screenX, screenY }) => {
+    if (timeFilterIsActive(layer) && !rowMatchesTemporalFilter(layer, row)) return false;
     if (layer.filterMode === "filter" && !rowMatchesFilter(layer, row)) return false;
     return Number.isFinite(screenX) && Number.isFinite(screenY) && screenX >= -50 && screenX <= MAP_VIEW.width + 50 && screenY >= -50 && screenY <= MAP_VIEW.height + 50;
   });
@@ -828,13 +1095,27 @@ function getPointDensityCells(layer) {
 }
 
 function getRenderableRows(layer) {
-  const sourceRows = isPointLayer(layer) ? getVisiblePointRows(layer) : layer.data.map((row, index) => ({ row, index }));
+  const sourceRows = isPointLayer(layer) ? getVisiblePointRows(layer) : layer.data.map((row, index) => ({ row, index })).filter(({ row }) => {
+    if (timeFilterIsActive(layer) && !rowMatchesTemporalFilter(layer, row)) return false;
+    return layer.filterMode !== "filter" || rowMatchesFilter(layer, row);
+  });
   const total = sourceRows.length;
-  const renderLimit = layer.maxRenderFeatures || (isCoverageLayer(layer) ? total : MAX_RENDER_POINTS);
-  const step = Math.max(1, Math.ceil(total / renderLimit));
+  const coverageLayer = isCoverageLayer(layer);
+  const nationalLimit = coverageLayer && layer.nationalMaxRenderFeatures && mapZoom <= (layer.nationalMaxZoom || 2.2) ? layer.nationalMaxRenderFeatures : null;
+  const renderLimit = nationalLimit || layer.maxRenderFeatures || (coverageLayer ? total : MAX_RENDER_POINTS);
+  if (total <= renderLimit) return sourceRows;
+  const priorityRows = coverageLayer ? sourceRows.filter(({ row }) => Number(row.SEGMENTS) > 0 || row.DISPLAY_ROLE === "named river corridor") : [];
+  const prioritySet = new Set(priorityRows);
+  const regularRows = priorityRows.length ? sourceRows.filter((entry) => !prioritySet.has(entry)) : sourceRows;
+  const regularLimit = Math.max(1, renderLimit - priorityRows.length);
   const rows = [];
-  for (let index = 0; index < total; index += step) rows.push(sourceRows[index]);
-  return rows;
+  const sampleStep = regularRows.length / regularLimit;
+  for (let sampleIndex = 0; sampleIndex < regularLimit; sampleIndex += 1) {
+    const row = regularRows[Math.min(regularRows.length - 1, Math.floor(sampleIndex * sampleStep))];
+    if (row) rows.push(row);
+  }
+  const selected = new Set([...priorityRows, ...rows]);
+  return sourceRows.filter((entry) => selected.has(entry));
 }
 
 function getPoint(row, layer) {
@@ -883,9 +1164,16 @@ function layerGeometryLabel(layer) {
 }
 
 function mappedRecordCount(layer) {
-  if (isPointLayer(layer)) return layer._pointIndex?.length || 0;
-  if (isCoverageLayer(layer)) return layer.data.filter((row) => row.__geometry).length;
-  return layer.data.filter((row) => Boolean(getPoint(row, layer))).length;
+  const rows = layer.data.filter((row) => {
+    if (timeFilterIsActive(layer) && !rowMatchesTemporalFilter(layer, row)) return false;
+    return layer.filterMode !== "filter" || rowMatchesFilter(layer, row);
+  });
+  if (isPointLayer(layer)) {
+    const indexedRows = new Set((layer._pointIndex || []).map((entry) => entry.row));
+    return rows.filter((row) => indexedRows.has(row)).length;
+  }
+  if (isCoverageLayer(layer)) return rows.filter((row) => row.__geometry).length;
+  return rows.filter((row) => Boolean(getPoint(row, layer))).length;
 }
 
 function layerColorDescription(layer) {
@@ -911,6 +1199,7 @@ function layerEncodingChips(layer) {
   else if (isCoverageLayer(layer)) chips.push(layer.geometryDisplay === "fill" ? "filled areas" : "outlines");
   else chips.push("uniform dots");
   chips.push(`color · ${layerColorDescription(layer)}`);
+  if (layer.timeField && temporalOptions(layer).length) chips.push(`time · ${readableFieldName(layer.timeField)}`);
   if (layer.clusterMode) chips.push(`${layer.clusteredRecordCount.toLocaleString()} grouped at this zoom`);
   if (filterIsActive(layer)) chips.push(`${layer.filterMode === "filter" ? "filtered to" : "highlighting"} ${activeFilterDescription(layer)}`);
   return chips;
@@ -934,11 +1223,21 @@ function renderVisualRecipe(layer) {
 
 function renderMapReadingStrip(layer) {
   if (!els.mapReadingStrip) return;
+  if (presentationMode) {
+    const active = layers.filter((entry) => entry.visible && !isFoundationLayer(entry));
+    const roleSummary = Object.entries(LAYER_ROLES).map(([role, definition]) => {
+      const count = active.filter((entry) => entry.role === role).length;
+      return count ? `<span class="reading-encoding presentation-role-chip"><b style="color:${definition.color}">${escapeHTML(definition.label)}</b>${count} layer${count === 1 ? "" : "s"}</span>` : "";
+    }).join("");
+    els.mapReadingStrip.innerHTML = `<div class="reading-primary"><span class="reading-kicker">PRESENTATION <em>all visible layers</em></span><div class="reading-title"><strong>${active.length} overlaid layer${active.length === 1 ? "" : "s"}</strong><span>Balanced contrast · hover for details</span></div></div><div class="reading-encodings">${roleSummary}<span class="reading-encoding presentation-note"><b>Map key</b>Layer colors, fills, lines, dots, and density remain distinct</span></div>`;
+    return;
+  }
   if (!layer) {
     els.mapReadingStrip.innerHTML = `<div class="reading-empty"><span class="reading-kicker">HOW TO READ</span><strong>Select a layer to see its visual encodings.</strong><span>Use the layer index below the map for the layers currently in view.</span></div>`;
     return;
   }
   const mapped = mappedRecordCount(layer); const role = LAYER_ROLES[layer.role]?.label || "Context / reference"; const contrastDescription = mapPresentation === "multiples" ? "one layer per pane" : mapPresentation === "focus" ? "focus in foreground" : mapEmphasis === "selected" ? "selected layer emphasized" : "all layers balanced"; const values = [{ label: "shape", value: layerGeometryLabel(layer) }, { label: "color", value: layerColorDescription(layer) }, isCoverageLayer(layer) ? { label: "surface", value: layerSurfaceDescription(layer) } : { label: "size", value: layerSizeDescription(layer) }, { label: "opacity", value: `${Math.round(Number(layer.opacity || 0) * 100)}%` }, { label: "contrast", value: contrastDescription }];
+  if (layer.timeField && temporalOptions(layer).length) values.push({ label: "time", value: readableFieldName(layer.timeField) });
   if (layer.displayMode === "density" && layer.renderDensityCells?.length) values.push({ label: "range", value: `${formatDensityValue(layer.renderDensityCells[0].scaleMin)}–${formatDensityValue(layer.renderDensityCells[0].scaleMax)}${layer.units ? ` ${layer.units}` : ""}` });
   const readingKicker = mapPresentation === "focus" ? "FOCUS LAYER <em>context stays quiet</em>" : mapPresentation === "multiples" ? "COMPARISON KEY <em>one pane per layer</em>" : "READING KEY <em>overlay mode</em>";
   els.mapReadingStrip.innerHTML = `<div class="reading-primary"><span class="reading-kicker">${readingKicker}</span><div class="reading-title">${layerSymbolMarkup(layer)}<strong>${escapeHTML(layer.name)}</strong><span>${escapeHTML(role)} · ${mapped.toLocaleString()} mapped</span></div></div><div class="reading-encodings">${values.map((item) => `<span class="reading-encoding"><b>${escapeHTML(item.label)}</b>${escapeHTML(item.value)}</span>`).join("")}${layer.clusterMode ? `<span class="reading-encoding reading-encoding-alert"><b>zoom</b>${layer.clusteredRecordCount.toLocaleString()} grouped</span>` : ""}${filterIsActive(layer) ? `<span class="reading-encoding reading-encoding-focus"><b>focus</b>${escapeHTML(activeFilterDescription(layer))}</span>` : ""}</div>`;
@@ -978,7 +1277,7 @@ function renderGeometryVisual(layer, row, index, value, max) {
   }
   const path = pathFromGeometry(geometry); if (!path) return { markup: "", count: 0 };
   const quiet = mapPresentation === "focus" && hasVisibleSelectedLayer() && layer.id !== selectedLayerId; const shouldFill = !quiet && (layer.geometryDisplay === "fill" || (layer.geometryDisplay === "auto" && ["candidate", "constraint"].includes(layer.role)));
-  const aquiferFeature = isAquiferLikeLayer(layer) && ["Polygon", "MultiPolygon"].includes(geometry.type); const geometryColor = quiet ? "#66868a" : featureColor(layer, row); const fill = !quiet && (shouldFill || aquiferFeature) ? geometryColor : "none"; const fillOpacity = quiet ? 0 : shouldFill ? Math.min(.58, Math.max(.12, Number(layer.opacity) * .45)) : aquiferFeature ? .025 : 0; const strokeWidth = quiet ? Math.max(.45, (Number(layer.strokeWidth) || 1.5) * .65) : Math.max(.35, Number(layer.strokeWidth) || 1.5); const label = featureLabel(row, layer, index); const units = layer.units ? ` ${layer.units}` : ""; const measure = layer.measureField && row[layer.measureField] !== undefined ? ` · ${row[layer.measureField]}${units}` : "";
+  const aquiferFeature = isAquiferLikeLayer(layer) && ["Polygon", "MultiPolygon"].includes(geometry.type); const geometryColor = quiet ? "#66868a" : featureColor(layer, row); const fill = !quiet && (shouldFill || aquiferFeature) ? geometryColor : "none"; const fillOpacity = quiet ? 0 : shouldFill ? Math.min(.58, Math.max(.12, Number(layer.opacity) * .45)) : aquiferFeature ? .025 : 0; const baseStrokeWidth = Math.max(.35, Number(layer.strokeWidth) || 1.5); const lineMeasure = layer.lineWidthByMeasure ? numericValue(row[layer.measureField], Number.NaN) : Number.NaN; const lineRatio = Number.isFinite(lineMeasure) && layer._measureMax > 0 ? Math.sqrt(clamp(lineMeasure / layer._measureMax, 0, 1)) : 0; const namedLine = layer.emphasizeNamedLines && String(row[layer.labelField] ?? "").trim() && (String(row.FTYPE ?? "").toLowerCase() === "artificialpath" || String(row.FTYPE ?? "").toLowerCase() === "namedrivercorridor" || Number(row.SEGMENTS) > 0); const encodedStrokeWidth = layer.lineWidthByMeasure ? baseStrokeWidth * (.9 + lineRatio * 1.6) : baseStrokeWidth; const strokeWidth = quiet ? Math.max(.45, baseStrokeWidth * .65) : encodedStrokeWidth * (namedLine ? 1.55 : 1); const label = featureLabel(row, layer, index); const units = layer.units ? ` ${layer.units}` : ""; const measure = layer.measureField && row[layer.measureField] !== undefined ? ` · ${row[layer.measureField]}${units}` : "";
   return { markup: `<path class="layer-feature layer-role-${escapeHTML(layer.role || "context")}${aquiferFeature ? " aquifer-feature" : ""}" data-layer-id="${layer.id}" data-row-index="${index}" fill="${fill}" fill-opacity="${fillOpacity}" stroke="${geometryColor}" stroke-width="${strokeWidth}" vector-effect="non-scaling-stroke" pointer-events="${aquiferFeature ? "none" : "all"}" d="${path}" opacity="${filterOpacity(layer, row)}"><title>${escapeHTML(label)}${escapeHTML(measure)}</title></path>`, count: 1 };
 }
 
@@ -1116,8 +1415,19 @@ function showMapFeatureTooltip(element) {
   const rowIndex = Number(element.dataset.rowIndex); const row = layer.data[rowIndex]; if (!row) return;
   const point = geometryAnchor(row, layer); if (!point) return; const label = row.__geometry ? featureLabel(row, layer, rowIndex) : getPoint(row, layer)?.label || "Mapped feature"; const units = layer.units ? ` ${layer.units}` : ""; const details = [];
   if (isAquiferLikeLayer(layer)) { const aquiferFields = inferAquiferFields(layer.fields); if (aquiferFields.name && row[aquiferFields.name] !== undefined) details.push(`Aquifer name: ${row[aquiferFields.name]}`); if (aquiferFields.type && row[aquiferFields.type] !== undefined) details.push(`Aquifer type: ${row[aquiferFields.type]}`); }
-  if (layer.measureField && row[layer.measureField] !== undefined) details.push(`${layer.measureField}: ${row[layer.measureField]}${units}`);
-  if (!isAquiferLikeLayer(layer) && layer.featureColorField && layer.featureColorField !== layer.labelField && row[layer.featureColorField] !== undefined) details.push(`${layer.featureColorField}: ${row[layer.featureColorField]}`);
+  if (layer.measureField && row[layer.measureField] !== undefined) { const measureKey = String(layer.measureField).toLowerCase(); const measureLabel = ["qama", "qa_ma"].includes(measureKey) ? "Mean annual flow estimate" : measureKey === "cwp_actual_average_flow_nmbr" ? "Reported average flow" : { frequency_pct: "Historical drought frequency", us_prcnt: "Outlook area share" }[measureKey] || readableFieldName(layer.measureField); details.push(`${measureLabel}: ${row[layer.measureField]}${units}`); }
+  if (!isAquiferLikeLayer(layer) && layer.featureColorField && layer.featureColorField !== layer.labelField && row[layer.featureColorField] !== undefined) { const colorFieldKey = String(layer.featureColorField).toLowerCase(); const colorFieldLabel = { cwp_major_minor_status_flag: "Facility size class" }[colorFieldKey] || readableFieldName(layer.featureColorField); details.push(`${colorFieldLabel}: ${row[layer.featureColorField]}`); }
+  if (layer.detailFields?.length) {
+    const detailLabels = { streamorde: "Stream order", totdasqkm: "Cumulative drainage area", vama: "Estimated velocity", gageidma: "USGS gage", gageqma: "Gaged mean annual flow", gageadjma: "Gage adjusted", cwp_city: "City", cwp_state: "State", cwp_county: "County", cwp_permit_status_desc: "Permit status", cwp_status: "Compliance status", cwp_major_minor_status_flag: "Facility size class", cwp_total_design_flow_nmbr: "Design flow", fac_derived_wbd_name: "Watershed", permit_name: "Permit name", permit_components: "Permit components", dfr_url: "EPA detailed report", drought_weeks: "Drought-threshold weeks", observation_weeks: "Observation weeks", drought_level: "Drought threshold", minimum_weeks: "Minimum event length", period_start: "Period start", period_end: "Period end", fips: "County FIPS", fcst_date: "Forecast release", target: "Forecast target month", area: "Outlook area" };
+    layer.detailFields.forEach((field) => {
+      const detailKey = String(field || "").toLowerCase();
+      if (!field || field === layer.measureField || field === layer.featureColorField || row[field] === undefined || row[field] === null || row[field] === "" || (detailKey === "gageidma" && String(row[field]) === "0")) return;
+      const value = detailKey === "gageadjma" ? (Number(row[field]) === 1 ? "yes" : "no") : row[field];
+      const detailUnits = ["totdasqkm", "lengthkm", "area"].includes(detailKey) ? detailKey === "lengthkm" ? " km" : " km²" : ["vama", "va_ma"].includes(detailKey) ? " fps" : detailKey === "gageqma" ? " cfs" : ["cwp_total_design_flow_nmbr"].includes(detailKey) ? " MGD" : ["drought_weeks", "observation_weeks", "minimum_weeks"].includes(detailKey) ? " weeks" : "";
+      const detailLabel = { ...detailLabels, va_ma: "Estimated velocity", lengthkm: "Reach length", resolution: "Source resolution", comid: "NHDPlus COMID" }[detailKey] || readableFieldName(field);
+      details.push(`${detailLabel}: ${value}${detailUnits}`);
+    });
+  }
   if (layer.timeField && row[layer.timeField] !== undefined) details.push(`${layer.timeField}: ${row[layer.timeField]}`);
   els.mapTooltip.innerHTML = `<strong>${escapeHTML(label)}</strong><span>${escapeHTML(layer.name)}</span>${details.map((detail) => `<span>${escapeHTML(detail)}</span>`).join("")}`; els.mapTooltip.hidden = false; els.mapTooltip.dataset.owner = "feature"; positionMapTooltip(point);
   if (element.classList.contains("aquifer-feature") || element.classList.contains("aquifer-boundary")) { element.classList.add("is-hovered"); element.parentNode?.appendChild(element); }
@@ -1274,6 +1584,79 @@ function clearAquiferFilter() {
   renderFilterChange(layer); showToast("Aquifer focus cleared.");
 }
 
+function stopTemporalPlayback() {
+  if (temporalPlaybackTimer) clearInterval(temporalPlaybackTimer);
+  temporalPlaybackTimer = null;
+  temporalPlaybackLayerId = null;
+}
+
+function renderTemporalControls(layer) {
+  if (!els.temporalToolbar) return;
+  const options = temporalOptions(layer);
+  const available = Boolean(layer?.timeField && options.length);
+  if (!available) {
+    if (layer) layer.timeFilterValue = "";
+    stopTemporalPlayback();
+    els.temporalToolbar.hidden = true;
+    return;
+  }
+  if (temporalPlaybackLayerId && temporalPlaybackLayerId !== layer.id) stopTemporalPlayback();
+  if (layer.timeFilterValue && !options.some((option) => option.value === layer.timeFilterValue)) layer.timeFilterValue = "";
+  const selectedIndex = options.findIndex((option) => option.value === layer.timeFilterValue);
+  els.temporalToolbar.hidden = false;
+  els.temporalTitle.textContent = layer.name;
+  els.temporalMeta.textContent = `${options.length.toLocaleString()} period${options.length === 1 ? "" : "s"} · ${readableFieldName(layer.timeField)}`;
+  els.temporalValueSelect.innerHTML = `<option value="">All periods</option>${options.map((option) => `<option value="${escapeHTML(option.value)}">${escapeHTML(option.label)}</option>`).join("")}`;
+  els.temporalValueSelect.value = layer.timeFilterValue || "";
+  els.temporalSlider.min = "0";
+  els.temporalSlider.max = String(options.length);
+  els.temporalSlider.value = String(selectedIndex < 0 ? 0 : selectedIndex + 1);
+  els.temporalSlider.setAttribute("aria-valuetext", selectedIndex < 0 ? "All periods" : options[selectedIndex].label);
+  els.temporalPlayButton.textContent = temporalPlaybackTimer ? "Pause" : "Play";
+  els.temporalPlayButton.setAttribute("aria-pressed", String(Boolean(temporalPlaybackTimer)));
+  els.temporalSummary.textContent = layer.timeFilterValue ? `Showing ${temporalLabel(layer.timeFilterValue)} only.` : "All periods shown · select a period or press Play.";
+  els.temporalToolbar.classList.toggle("has-selection", Boolean(layer.timeFilterValue));
+}
+
+function setTemporalFilter(value) {
+  const layer = layers.find((entry) => entry.id === selectedLayerId);
+  if (!layer) return;
+  const options = temporalOptions(layer);
+  layer.timeFilterValue = options.some((option) => option.value === value) ? value : "";
+  renderAll();
+}
+
+function advanceTemporalPlayback() {
+  const layer = layers.find((entry) => entry.id === temporalPlaybackLayerId);
+  if (!layer) { stopTemporalPlayback(); return; }
+  const options = temporalOptions(layer);
+  const currentIndex = options.findIndex((option) => option.value === layer.timeFilterValue);
+  if (!options.length || currentIndex >= options.length - 1) {
+    stopTemporalPlayback();
+    renderTemporalControls(layer);
+    return;
+  }
+  layer.timeFilterValue = options[currentIndex + 1].value;
+  renderAll();
+}
+
+function toggleTemporalPlayback() {
+  const layer = layers.find((entry) => entry.id === selectedLayerId);
+  const options = temporalOptions(layer);
+  if (!layer || !options.length) return;
+  if (temporalPlaybackTimer) {
+    stopTemporalPlayback();
+    renderTemporalControls(layer);
+    return;
+  }
+  temporalPlaybackLayerId = layer.id;
+  const currentIndex = options.findIndex((option) => option.value === layer.timeFilterValue);
+  if (currentIndex >= options.length - 1) layer.timeFilterValue = "";
+  advanceTemporalPlayback();
+  if (temporalPlaybackLayerId) temporalPlaybackTimer = setInterval(advanceTemporalPlayback, 850);
+  renderTemporalControls(layer);
+}
+
 function renderProperties() {
   const layer = layers.find((entry) => entry.id === selectedLayerId);
   const hasLayer = Boolean(layer); els.noSelection.hidden = hasLayer; els.propertyForm.hidden = !hasLayer; els.propertyLayerStatus.textContent = layer ? layer.name : "Select a layer";
@@ -1290,7 +1673,82 @@ function renderPreview() {
   els.previewHead.innerHTML = `<tr>${displayFields.map((field) => `<th>${escapeHTML(field)}</th>`).join("")}</tr>`; els.previewBody.innerHTML = layer.data.slice(0, 8).map((row) => `<tr>${displayFields.map((field) => `<td>${escapeHTML(row[field])}</td>`).join("")}</tr>`).join("");
 }
 
-function renderAll() { renderLayerList(); renderProperties(); renderPreview(); renderMap(); }
+function renderAll() { const selected = layers.find((layer) => layer.id === selectedLayerId); renderLayerList(); renderProperties(); renderPreview(); renderTemporalControls(selected); renderMap(); }
+
+let riskBriefData = { annual: [], monthly: [], droughtAverage: 0, droughtHighShare: 0, groundwaterObservations: 0, status: "loading" };
+
+function briefCompactNumber(value) {
+  const number = Number(value) || 0;
+  if (Math.abs(number) >= 1e6) return `${(number / 1e6).toFixed(number >= 1e7 ? 0 : 1)}M`;
+  if (Math.abs(number) >= 1e3) return `${(number / 1e3).toFixed(number >= 1e5 ? 0 : 1)}K`;
+  return Math.round(number).toLocaleString();
+}
+
+function briefUsd(value) {
+  const number = Number(value) || 0;
+  if (number >= 1e9) return `$${(number / 1e9).toFixed(number >= 1e10 ? 0 : 1)}B`;
+  if (number >= 1e6) return `$${(number / 1e6).toFixed(0)}M`;
+  return `$${Math.round(number / 1e3)}K`;
+}
+
+function briefNumeric(value) {
+  const number = Number(String(value ?? "").replace(/[$,%\s,]/g, ""));
+  return Number.isFinite(number) ? number : 0;
+}
+
+function renderRiskEventChart(annual) {
+  const svg = document.getElementById("briefHazardChart");
+  if (!svg || !annual.length) return;
+  const width = 760; const height = 250; const margin = { top: 26, right: 52, bottom: 42, left: 48 }; const innerWidth = width - margin.left - margin.right; const innerHeight = height - margin.top - margin.bottom;
+  const maxEvents = Math.max(...annual.map((row) => row.records), 1); const maxDamage = Math.max(...annual.map((row) => row.damage), 1); const barWidth = Math.min(72, innerWidth / annual.length * .56); const x = (index) => margin.left + (index + .5) * (innerWidth / annual.length); const yEvents = (value) => margin.top + innerHeight - (value / maxEvents) * innerHeight; const yDamage = (value) => margin.top + innerHeight - (value / maxDamage) * innerHeight;
+  const grid = [0, .5, 1].map((ratio) => { const y = margin.top + innerHeight - ratio * innerHeight; return `<line class="brief-chart-grid" x1="${margin.left}" x2="${width - margin.right}" y1="${y}" y2="${y}"></line><text class="brief-chart-axis" x="${margin.left - 10}" y="${y + 4}" text-anchor="end">${briefCompactNumber(maxEvents * ratio)}</text>`; }).join("");
+  const bars = annual.map((row, index) => { const barHeight = innerHeight - (yEvents(row.records) - margin.top); const barX = x(index) - barWidth / 2; return `<rect class="brief-event-bar" x="${barX}" y="${yEvents(row.records)}" width="${barWidth}" height="${barHeight}" rx="2"><title>${row.year}: ${row.records.toLocaleString()} reported records</title></rect><text class="brief-chart-value" x="${x(index)}" y="${Math.max(16, yEvents(row.records) - 8)}" text-anchor="middle">${briefCompactNumber(row.records)}</text><text class="brief-chart-axis brief-chart-year" x="${x(index)}" y="${height - 16}" text-anchor="middle">${row.year}</text>`; }).join("");
+  const damagePath = annual.map((row, index) => `${index ? "L" : "M"} ${x(index)} ${yDamage(row.damage)}`).join(" "); const damageDots = annual.map((row, index) => `<circle class="brief-damage-dot" cx="${x(index)}" cy="${yDamage(row.damage)}" r="4"><title>${row.year}: ${briefUsd(row.damage)} reported property and crop damage</title></circle>`).join("");
+  svg.innerHTML = `<defs><linearGradient id="briefBarGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e5a06f"></stop><stop offset="1" stop-color="#c45b28"></stop></linearGradient></defs><text class="brief-chart-axis-title" x="${margin.left}" y="14">REPORTED RECORDS</text><text class="brief-chart-axis-title brief-chart-axis-right" x="${width - margin.right}" y="14" text-anchor="end">DAMAGE · NOMINAL USD</text>${grid}<line class="brief-chart-baseline" x1="${margin.left}" x2="${width - margin.right}" y1="${margin.top + innerHeight}" y2="${margin.top + innerHeight}"></line>${bars}<path class="brief-damage-line" d="${damagePath}"></path>${damageDots}<text class="brief-chart-axis brief-chart-right-label" x="${width - margin.right + 10}" y="${margin.top + 4}">${briefUsd(maxDamage)}</text><text class="brief-chart-axis brief-chart-right-label" x="${width - margin.right + 10}" y="${margin.top + innerHeight + 4}">$0</text>`;
+}
+
+function renderRiskGroundwaterChart(monthly) {
+  const svg = document.getElementById("briefGroundwaterChart");
+  if (!svg || !monthly.length) return;
+  const width = 520; const height = 130; const margin = { top: 12, right: 10, bottom: 28, left: 10 }; const innerWidth = width - margin.left - margin.right; const innerHeight = height - margin.top - margin.bottom; const maxRows = Math.max(...monthly.map((row) => Number(row.rows) || 0), 1); const barWidth = Math.max(3.2, innerWidth / monthly.length - 1.1); const x = (index) => margin.left + index * (innerWidth / monthly.length); const y = (value) => margin.top + innerHeight - (value / maxRows) * innerHeight; const bars = monthly.map((row, index) => { const count = Number(row.rows) || 0; const month = row.month || ""; const year = month.slice(0, 4); const color = year === "2021" ? "#8bbcb0" : year === "2022" ? "#73a99f" : year === "2023" ? "#5e968f" : year === "2024" ? "#4f8582" : "#3d7275"; return `<rect class="brief-groundwater-bar" x="${x(index)}" y="${y(count)}" width="${barWidth}" height="${margin.top + innerHeight - y(count)}" rx="1" fill="${color}"><title>${month}: ${count.toLocaleString()} observations</title></rect>`; }).join(""); const yearLabels = [...new Set(monthly.map((row) => String(row.month || "").slice(0, 4)))].map((year) => { const index = monthly.findIndex((row) => String(row.month || "").startsWith(year)); return `<text class="brief-chart-axis brief-water-year" x="${x(index)}" y="${height - 7}">${year}</text>`; }).join("");
+  svg.innerHTML = `<line class="brief-chart-grid" x1="${margin.left}" x2="${width - margin.right}" y1="${y(maxRows)}" y2="${y(maxRows)}"></line><line class="brief-chart-baseline" x1="${margin.left}" x2="${width - margin.right}" y1="${margin.top + innerHeight}" y2="${margin.top + innerHeight}"></line>${bars}${yearLabels}<text class="brief-chart-axis-title" x="${margin.left}" y="10">MONTHLY OBSERVATIONS · SAMPLE DAY 15</text>`;
+}
+
+function renderRiskBrief() {
+  const status = document.getElementById("briefDataStatus");
+  if (riskBriefData.status === "ready") {
+    const totalEvents = riskBriefData.annual.reduce((sum, row) => sum + row.records, 0); const peak = [...riskBriefData.annual].sort((left, right) => right.records - left.records)[0]; const monthlyCounts = riskBriefData.monthly.map((row) => Number(row.rows) || 0); const minMonthly = Math.min(...monthlyCounts); const maxMonthly = Math.max(...monthlyCounts); const droughtPct = riskBriefData.droughtAverage;
+    if (status) status.textContent = `BUNDLE READY · ${riskBriefData.annual[0]?.year || "2021"}—${riskBriefData.annual.at(-1)?.year || "2025"}`;
+    const hazardPeriod = document.getElementById("briefHazardPeriod"); if (hazardPeriod) hazardPeriod.textContent = `${riskBriefData.annual[0]?.year || "2021"}—${riskBriefData.annual.at(-1)?.year || "2025"}`;
+    const hazardFoot = document.getElementById("briefHazardFoot"); if (hazardFoot) hazardFoot.textContent = `Peak reporting year: ${peak?.year || "—"} · ${briefCompactNumber(peak?.records || 0)} records · ${briefUsd(peak?.damage || 0)} reported damage`;
+    const groundwaterCount = document.getElementById("briefGroundwaterCount"); if (groundwaterCount) groundwaterCount.textContent = briefCompactNumber(riskBriefData.groundwaterObservations);
+    const groundwaterFoot = document.getElementById("briefGroundwaterFoot"); if (groundwaterFoot) groundwaterFoot.textContent = `${riskBriefData.monthly.length} monthly snapshots · ${minMonthly.toLocaleString()}–${maxMonthly.toLocaleString()} readings / snapshot`;
+    const disruption = document.getElementById("briefDisruptionValue"); if (disruption) disruption.textContent = `${briefCompactNumber(totalEvents)} RECORDS`;
+    const volatility = document.getElementById("briefVolatilityValue"); if (volatility) volatility.textContent = `${riskBriefData.monthly.length} SNAPSHOTS`;
+    const drought = document.getElementById("briefDroughtValue"); if (drought) drought.textContent = `${droughtPct.toFixed(1)}% AVG`;
+    const detail = document.getElementById("briefThesisDetail"); if (detail) detail.textContent = `${briefCompactNumber(totalEvents)} NOAA hazard records sit beside ${briefCompactNumber(riskBriefData.groundwaterObservations)} USGS well observations and a county drought-frequency signal. The visual keeps them separate so a site can be interrogated before it is scored.`;
+    renderRiskEventChart(riskBriefData.annual); renderRiskGroundwaterChart(riskBriefData.monthly);
+  } else if (status) {
+    status.textContent = "HISTORICAL EVIDENCE · UNAVAILABLE";
+  }
+}
+
+async function loadRiskBriefData() {
+  try {
+    const responses = await Promise.all([
+      fetch("data/historical/derived/noaa_storm_events_state_year_type_2021_2025.csv", { cache: "no-store" }),
+      fetch("data/historical/collection-manifest.json", { cache: "no-store" }),
+      fetch("data/raw/usdm_county_drought_frequency_2020_2025.csv", { cache: "no-store" })
+    ]);
+    const failed = responses.find((response) => !response.ok); if (failed) throw new Error(`Risk brief data unavailable (${failed.status}).`);
+    const [stormText, manifest, droughtText] = await Promise.all([responses[0].text(), responses[1].json(), responses[2].text()]); const stormRows = parseInput(stormText); const droughtRows = parseInput(droughtText); const annualMap = new Map();
+    stormRows.forEach((row) => { const year = String(row.year); if (!annualMap.has(year)) annualMap.set(year, { year, records: 0, damage: 0, types: new Set() }); const target = annualMap.get(year); target.records += briefNumeric(row.detail_records); target.damage += briefNumeric(row.property_damage_usd) + briefNumeric(row.crop_damage_usd); target.types.add(row.event_type); });
+    const groundwaterSource = manifest.sources?.find((source) => source.name?.toLowerCase().includes("groundwater")); const monthly = groundwaterSource?.raw_files || []; const droughtValues = droughtRows.map((row) => briefNumeric(row.frequency_pct)).filter((value) => Number.isFinite(value)); riskBriefData = { annual: [...annualMap.values()].sort((left, right) => Number(left.year) - Number(right.year)), monthly, groundwaterObservations: Number(groundwaterSource?.rows?.observations) || monthly.reduce((sum, row) => sum + (Number(row.rows) || 0), 0), droughtAverage: droughtValues.length ? droughtValues.reduce((sum, value) => sum + value, 0) / droughtValues.length : 0, droughtHighShare: droughtValues.length ? droughtValues.filter((value) >= 25).length / droughtValues.length : 0, status: "ready" };
+    renderRiskBrief();
+  } catch (error) {
+    riskBriefData.status = "error"; const detail = document.getElementById("briefThesisDetail"); if (detail) detail.textContent = "The presentation bundle could not be read in this session. Open the evidence map below to inspect the existing layers or refresh the deployment."; renderRiskBrief();
+  }
+}
 
 function updateFilterSummaries(layer) {
   if (!layer) return;
@@ -1320,12 +1778,49 @@ function showAllLayers() {
   renderLayerList(); renderMap(); showToast(boundaryMode === "states" ? "All data layers shown; state lines remain active." : "All layers shown.");
 }
 
+function setPresentationMode(enabled) {
+  const nextMode = Boolean(enabled);
+  if (nextMode === presentationMode) return;
+  if (nextMode) {
+    presentationSnapshot = { visibility: new Map(layers.map((layer) => [layer.id, layer.visible])), mapPresentation, mapEmphasis };
+    layers.forEach((layer) => { layer.visible = !(layer.id === aquiferLayerId && boundaryMode === "states"); });
+    mapPresentation = "overlay";
+    mapEmphasis = "balanced";
+  } else if (presentationSnapshot) {
+    layers.forEach((layer) => { if (presentationSnapshot.visibility.has(layer.id)) layer.visible = presentationSnapshot.visibility.get(layer.id); });
+    mapPresentation = presentationSnapshot.mapPresentation;
+    mapEmphasis = presentationSnapshot.mapEmphasis;
+    presentationSnapshot = null;
+  }
+  presentationMode = nextMode;
+  document.body.classList.toggle("presentation-mode", presentationMode);
+  const presentationButton = document.getElementById("presentationButton");
+  if (presentationButton) {
+    presentationButton.textContent = presentationMode ? "Exit presentation" : "Presentation view";
+    presentationButton.setAttribute("aria-pressed", String(presentationMode));
+  }
+  renderAll();
+  showToast(presentationMode ? "Presentation view · all loaded layers overlaid." : "Returned to editing view.");
+  if (presentationMode) window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function addDataLayer(data, name, source, options = {}) { const layer = createLayer(name, data, source); Object.assign(layer, options); refreshLayerCaches(layer); layers.unshift({ ...layer, color: options.color || LAYER_COLORS[layers.length % LAYER_COLORS.length] }); selectedLayerId = layer.id; renderAll(); els.fileStatus.textContent = `${source} · ${data.length.toLocaleString()} rows · ${layer.fields.length} columns`; showToast(options.foundation ? `${layer.name} added as a map foundation.` : `${layer.name} loaded. Define its fields at right.`); return layer; }
 function focusDataEntry() { const panel = document.getElementById("dataEntryPanel"); panel.classList.remove("is-collapsed"); document.getElementById("toggleDataEntryButton")?.setAttribute("aria-expanded", "true"); document.getElementById("toggleDataEntryButton").textContent = "Hide"; panel.scrollIntoView({ behavior: "smooth", block: "nearest" }); els.pasteLayerName.focus(); }
 function createPastedLayer() { try { addDataLayer(parseInput(els.pasteInput.value), els.pasteLayerName.value.trim() || "Pasted layer", "pasted data"); els.pasteInput.value = ""; els.pasteLayerName.value = ""; els.pasteError.hidden = true; } catch (error) { els.pasteError.textContent = error.message; els.pasteError.hidden = false; } }
 function loadFile(file) { if (!file) return; const reader = new FileReader(); reader.onload = () => { try { addDataLayer(parseInput(String(reader.result)), file.name.replace(/\.[^.]+$/, ""), file.name); } catch (error) { showToast(error.message || "Could not read that file."); } }; reader.readAsText(file); }
 async function loadBundledSample() { try { const response = await fetch("sample.csv", { cache: "no-store" }); if (!response.ok) throw new Error(`sample.csv could not be loaded (${response.status}).`); addDataLayer(parseInput(await response.text()), "sample.csv · groundwater depth", "bundled sample.csv"); } catch (error) { showToast(error.message || "Could not load sample.csv."); } }
-async function loadRealDataset(key) { const dataset = REAL_DATASETS[key]; if (!dataset) return; try { const response = await fetch(dataset.file, { cache: "no-store" }); if (!response.ok) throw new Error(`${dataset.file} could not be loaded (${response.status}).`); addDataLayer(parseInput(await response.text()), dataset.name, dataset.source, dataset.options); } catch (error) { showToast(error.message || `Could not load ${dataset.name}.`); } }
+async function loadRealDataset(key) { const dataset = REAL_DATASETS[key]; if (!dataset) return null; try { const response = await fetch(dataset.file, { cache: "no-store" }); if (!response.ok) throw new Error(`${dataset.file} could not be loaded (${response.status}).`); return addDataLayer(parseInput(await response.text()), dataset.name, dataset.source, dataset.options); } catch (error) { showToast(error.message || `Could not load ${dataset.name}.`); return null; } }
+
+async function loadRiskEvidenceLayers() {
+  const existingGroundwater = layers.find((layer) => layer.source?.includes("monthly 15th-day snapshots")); const existingHazards = layers.find((layer) => layer.source?.includes("state/year/event-type summary"));
+  const groundwater = existingGroundwater || await loadRealDataset("gwdHistoryPack"); const hazards = existingHazards || await loadRealDataset("stormSummaryPack");
+  if (!groundwater && !hazards) return;
+  layers.forEach((layer) => { layer.visible = true; }); mapPresentation = "overlay"; mapEmphasis = "balanced"; selectedLayerId = hazards?.id || groundwater?.id || selectedLayerId; renderAll(); document.querySelector(".map-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }); showToast("Evidence map loaded · water and hazard history overlaid.");
+}
+async function fetchWithTimeout(url, options = {}, timeout = 15000) {
+  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), timeout);
+  try { return await fetch(url, { ...options, signal: controller.signal }); } finally { clearTimeout(timer); }
+}
 function inverseProjectCoordinate(x, y) {
   const projection = US_MAP_PROJECTION;
   const mercator = (value) => Math.log(Math.tan(Math.PI / 4 + (value * Math.PI) / 360));
@@ -1363,23 +1858,73 @@ function parseArcGISFeatureCollection(parsed) {
   }).filter(Boolean);
 }
 
+function intersectMapBounds(left, right) {
+  const bounds = { west: Math.max(left.west, right.west), east: Math.min(left.east, right.east), south: Math.max(left.south, right.south), north: Math.min(left.north, right.north) };
+  return bounds.west < bounds.east && bounds.south < bounds.north ? bounds : null;
+}
+
+function remoteQueryBounds(dataset, bounds, resultRecordCount, whereOverride = "") {
+  const where = whereOverride || (dataset.zoomedWhere && mapZoom > (dataset.tileMaxZoom || 2.2) ? dataset.zoomedWhere : dataset.where || "1=1");
+  const params = new URLSearchParams({ where, outFields: dataset.outFields, returnGeometry: "true", outSR: "4326", geometry: `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`, geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", resultRecordCount: String(Math.min(resultRecordCount, dataset.queryMaxFeatures || resultRecordCount)), f: "json" });
+  return fetchWithTimeout(`${dataset.url}/query?${params.toString()}`, { cache: "no-store" }).then(async (response) => {
+    if (!response.ok) throw new Error(`${dataset.name} returned HTTP ${response.status}.`);
+    const parsed = await response.json(); if (parsed.error) throw new Error(parsed.error.message || `${dataset.name} could not be queried.`);
+    return { data: parseArcGISFeatureCollection(parsed), exceededTransferLimit: Boolean(parsed.exceededTransferLimit) };
+  });
+}
+
+function remoteQueryTiles(dataset, bounds) {
+  const shouldTile = dataset.tileColumns && dataset.tileRows && mapZoom <= (dataset.tileMaxZoom || 2.2);
+  if (!shouldTile) return [bounds];
+  const tiles = []; const tileWidth = (bounds.east - bounds.west) / dataset.tileColumns; const tileHeight = (bounds.north - bounds.south) / dataset.tileRows;
+  for (let row = 0; row < dataset.tileRows; row += 1) for (let column = 0; column < dataset.tileColumns; column += 1) tiles.push({ west: bounds.west + column * tileWidth, east: bounds.west + (column + 1) * tileWidth, south: bounds.south + row * tileHeight, north: bounds.south + (row + 1) * tileHeight });
+  return tiles;
+}
+
 async function loadRemoteDataset(key) {
   const dataset = REMOTE_DATASETS[key]; if (!dataset) return;
   if (mapZoom < dataset.minZoom) {
     setMapZoom(dataset.minZoom);
     showToast(`Zoomed to ${Math.round(dataset.minZoom * 100)}% for ${dataset.name}; loading the visible area…`);
   }
-  const bounds = visibleMapBounds(); const params = new URLSearchParams({ where: "1=1", outFields: dataset.outFields, returnGeometry: "true", outSR: "4326", geometry: `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`, geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", resultRecordCount: String(dataset.maxFeatures), f: "json" });
+  if (dataset.localFirst && dataset.fallbackFile) {
+    try {
+      const fallbackResponse = await fetch(dataset.fallbackFile, { cache: "no-store" }); if (!fallbackResponse.ok) throw new Error(`Could not load ${dataset.fallbackFile}.`);
+      const fallbackData = parseInput(await fallbackResponse.text()); const fallbackLayer = addDataLayer(fallbackData, `${dataset.name} · bundled example`, `${dataset.source} · bundled display snapshot`, dataset.options); fallbackLayer.notes = `${dataset.options.notes} This bundled snapshot is a broad generalized display network with named river corridors from the same source.`; renderAll(); showToast(`${dataset.name} loaded from the bundled display snapshot.`); return;
+    } catch (error) { /* Fall through to the live query when the bundled snapshot is unavailable. */ }
+  }
+  const bounds = visibleMapBounds(); const tiles = remoteQueryTiles(dataset, bounds); const tileLimit = Math.max(1, Math.ceil(dataset.maxFeatures / tiles.length));
   try {
     showToast(`Loading ${dataset.name} for the visible map area…`);
-    const response = await fetch(`${dataset.url}/query?${params.toString()}`, { cache: "no-store" });
-    if (!response.ok) throw new Error(`${dataset.name} returned HTTP ${response.status}.`);
-    const parsed = await response.json(); if (parsed.error) throw new Error(parsed.error.message || `${dataset.name} could not be queried.`);
-    const data = parseArcGISFeatureCollection(parsed);
-    if (!data.length) { showToast(`No ${dataset.name.toLowerCase()} features intersect the visible map area.`); return; }
-    const layer = addDataLayer(data, dataset.name, dataset.source, dataset.options); layer.notes = `${dataset.options.notes} Current query: ${Math.round(bounds.west * 100) / 100}° to ${Math.round(bounds.east * 100) / 100}° longitude, ${Math.round(bounds.south * 100) / 100}° to ${Math.round(bounds.north * 100) / 100}° latitude${parsed.exceededTransferLimit ? " · service capped this result" : ""}.`; renderAll();
+    const tileResultsPromise = Promise.all(tiles.map((tile) => remoteQueryBounds(dataset, tile, tileLimit)));
+    const priorityResultsPromise = Promise.all((mapZoom <= (dataset.tileMaxZoom || 2.2) ? dataset.priorityNames || [] : []).map((name) => {
+      const field = dataset.priorityNameField || "GNIS_NAME";
+      const escapedName = String(name).replaceAll("'", "''");
+      const priorityBounds = dataset.priorityBounds?.[name] ? intersectMapBounds(bounds, { west: dataset.priorityBounds[name][0], south: dataset.priorityBounds[name][1], east: dataset.priorityBounds[name][2], north: dataset.priorityBounds[name][3] }) : bounds;
+      return priorityBounds ? remoteQueryBounds(dataset, priorityBounds, dataset.priorityLimit || 100, `${field}='${escapedName}' AND FTYPE IN ('StreamRiver','ArtificialPath') AND LENGTHKM>=2`) : Promise.resolve({ data: [], exceededTransferLimit: false });
+    }));
+    const [tileResults, priorityResults] = await Promise.all([tileResultsPromise, priorityResultsPromise]);
+    const allResults = [...priorityResults, ...tileResults];
+    const parsed = { exceededTransferLimit: allResults.some((result) => result.exceededTransferLimit) };
+    const data = [...new Map(allResults.flatMap((result) => result.data).map((row, index) => [String(row.__featureId ?? row.REACHCODE ?? index), row])).values()].slice(0, dataset.maxFeatures);
+    if (!data.length) {
+      if (dataset.fallbackFile) {
+        const fallbackResponse = await fetch(dataset.fallbackFile, { cache: "no-store" }); if (!fallbackResponse.ok) throw new Error(`No ${dataset.name.toLowerCase()} features intersect the visible map area.`);
+        const fallbackData = parseInput(await fallbackResponse.text()); const fallbackLayer = addDataLayer(fallbackData, `${dataset.name} · bundled example`, `${dataset.source} · bundled fallback`, dataset.options); fallbackLayer.notes = `${dataset.options.notes} This bundled display fallback is a broad generalized network with named river corridors from the same NHD service.`; renderAll(); showToast(`${dataset.name} loaded from its bundled display example.`); return;
+      }
+      showToast(`No ${dataset.name.toLowerCase()} features intersect the visible map area.`); return;
+    }
+    const layer = addDataLayer(data, dataset.name, dataset.source, dataset.options); layer.notes = `${dataset.options.notes} Current query: ${Math.round(bounds.west * 100) / 100}° to ${Math.round(bounds.east * 100) / 100}° longitude, ${Math.round(bounds.south * 100) / 100}° to ${Math.round(bounds.north * 100) / 100}° latitude${tiles.length > 1 ? ` · ${tiles.length} tiled requests` : ""}${parsed.exceededTransferLimit ? " · service capped one or more tiles" : ""}.`; renderAll();
     if (parsed.exceededTransferLimit) showToast(`${dataset.name} loaded with the service result cap; zoom in further for a clearer view.`);
-  } catch (error) { showToast(error.message || `Could not load ${dataset.name}.`); }
+  } catch (error) {
+    if (dataset.fallbackFile) {
+      try {
+        const fallbackResponse = await fetch(dataset.fallbackFile, { cache: "no-store" }); if (!fallbackResponse.ok) throw error;
+        const fallbackData = parseInput(await fallbackResponse.text()); const fallbackLayer = addDataLayer(fallbackData, `${dataset.name} · bundled example`, `${dataset.source} · bundled fallback`, dataset.options); fallbackLayer.notes = `${dataset.options.notes} This bundled display fallback is a broad generalized network with named river corridors from the same NHD service.`; renderAll(); showToast(`${dataset.name} loaded from its bundled display example; live service unavailable.`); return;
+      } catch (fallbackError) { /* Report the original service error when the local fallback is also unavailable. */ }
+    }
+    showToast(error.message || `Could not load ${dataset.name}.`);
+  }
 }
 function applyBoundaryMode() { els.statePaths.style.display = boundaryMode === "aquifers" ? "none" : ""; const aquifer = layers.find((layer) => layer.id === aquiferLayerId); if (aquifer) aquifer.visible = boundaryMode !== "states"; if (els.boundaryModeSelect.value !== boundaryMode) els.boundaryModeSelect.value = boundaryMode; if (aquifer && boundaryMode !== "states") els.fileStatus.textContent = "Map foundation · USGS principal aquifers"; renderLayerList(); renderProperties(); renderMap(); }
 async function loadBundledAquifers() {
@@ -1444,6 +1989,11 @@ async function seedDemoLayers() {
 
 document.getElementById("newLayerButton").addEventListener("click", focusDataEntry); document.getElementById("addLayerButton").addEventListener("click", focusDataEntry); document.getElementById("focusLayerButton").addEventListener("click", focusSelectedLayer); document.getElementById("showAllLayersButton").addEventListener("click", showAllLayers); document.getElementById("pasteDataButton").addEventListener("click", focusDataEntry); document.getElementById("openFileButton").addEventListener("click", () => document.getElementById("fileInput").click()); document.getElementById("fileInput").addEventListener("change", (event) => loadFile(event.target.files[0])); document.getElementById("loadSampleFileButton").addEventListener("click", loadBundledSample); document.getElementById("createPastedLayerButton").addEventListener("click", createPastedLayer); document.getElementById("loadExampleButton").addEventListener("click", () => { els.pasteLayerName.value = "sample point observations"; els.pasteInput.value = "lat,long,gwd,year\n30.416,-87.853,35.0,2002\n30.452,-87.742,13.66,2009"; }); document.getElementById("applyPropertiesButton").addEventListener("click", applyProperties); els.geometryTypeField.addEventListener("change", toggleGeometryFields); els.displayModeField.addEventListener("change", toggleGeometryFields); els.opacityField.addEventListener("input", () => { els.opacityOutput.value = `${els.opacityField.value}%`; }); els.markerSizeField.addEventListener("input", () => { els.markerSizeOutput.value = `${els.markerSizeField.value}px`; }); els.lineWidthField.addEventListener("input", () => { els.lineWidthOutput.value = `${els.lineWidthField.value}px`; }); document.getElementById("clearLayersButton").addEventListener("click", () => { layers = []; selectedLayerId = null; aquiferLayerId = null; boundaryMode = "states"; els.boundaryModeSelect.value = "states"; els.statePaths.style.display = ""; renderAll(); els.fileStatus.textContent = "Workspace cleared · add a layer to begin"; }); document.getElementById("exportButton").addEventListener("click", exportSVG); document.getElementById("baseMapSelect").addEventListener("change", (event) => { els.mapGridRect.style.display = event.target.value === "grid" ? "block" : "none"; renderMap(); }); document.getElementById("labelModeSelect").addEventListener("change", (event) => { els.mapLabels.style.display = event.target.value === "state" ? "block" : "none"; renderMap(); }); document.getElementById("mapPresentationSelect").addEventListener("change", (event) => { mapPresentation = event.target.value; renderMap(); }); document.getElementById("layerEmphasisSelect").addEventListener("change", (event) => { mapEmphasis = event.target.value; renderMap(); }); document.getElementById("zoomInButton").addEventListener("click", () => setMapZoom(mapZoom * 1.35)); document.getElementById("zoomOutButton").addEventListener("click", () => setMapZoom(mapZoom / 1.35)); document.getElementById("resetZoomButton").addEventListener("click", resetMapView); document.getElementById("zoomToDataButton").addEventListener("click", zoomToSelectedLayer); document.getElementById("fitMapButton").addEventListener("click", () => { resetMapView(); document.getElementById("mapStage").animate([{ opacity: .72 }, { opacity: 1 }], { duration: 250 }); showToast("Map view reset."); });
 
+document.getElementById("presentationButton").addEventListener("click", () => setPresentationMode(!presentationMode));
+document.getElementById("exitPresentationButton").addEventListener("click", () => setPresentationMode(false));
+document.getElementById("briefExploreButton").addEventListener("click", loadRiskEvidenceLayers);
+document.addEventListener("keydown", (event) => { if (event.key === "Escape" && presentationMode) setPresentationMode(false); });
+
 document.getElementById("toggleDataEntryButton").addEventListener("click", () => {
   const panel = document.getElementById("dataEntryPanel");
   const isCollapsed = panel.classList.toggle("is-collapsed");
@@ -1477,5 +2027,14 @@ document.getElementById("applyAquiferFilterButton").addEventListener("click", ap
 document.getElementById("clearAquiferFilterButton").addEventListener("click", clearAquiferFilter);
 document.getElementById("applyStateFilterButton").addEventListener("click", applyStateFilter);
 document.getElementById("clearStateFilterButton").addEventListener("click", clearStateFilter);
+els.temporalValueSelect.addEventListener("change", (event) => setTemporalFilter(event.target.value));
+els.temporalSlider.addEventListener("input", (event) => {
+  const layer = layers.find((entry) => entry.id === selectedLayerId);
+  const options = temporalOptions(layer);
+  const index = Number(event.target.value) - 1;
+  setTemporalFilter(index >= 0 ? options[index]?.value || "" : "");
+});
+els.temporalPlayButton.addEventListener("click", toggleTemporalPlayback);
+document.getElementById("clearTemporalButton").addEventListener("click", () => setTemporalFilter(""));
 
-bindMapNavigation(); applyMapTransform(); renderBaseMap(); renderStateLabels(); void seedDemoLayers();
+bindMapNavigation(); applyMapTransform(); renderBaseMap(); renderStateLabels(); void loadRiskBriefData(); void seedDemoLayers();
